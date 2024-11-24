@@ -37,6 +37,14 @@
             border-radius: 4px;
             cursor: pointer;
         }
+        .change-link {
+            margin-left: 10px;
+            color: blue;
+            cursor: pointer;
+        }
+        .hidden {
+            display: none;
+        }
     </style>
     <script src="../js/perfil.js" defer></script>
 </head>
@@ -44,7 +52,7 @@
     <main>
         <h1>Perfil de Usuario</h1>
         <div id="user-container" class="user-container"></div>
-        <div class="form-container">
+        <div id="form-container" class="form-container hidden">
             <h2>Modificar Datos</h2>
             <form id="modify-form">
                 <label for="nombre">Nombre:</label>

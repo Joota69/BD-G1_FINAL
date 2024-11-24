@@ -71,6 +71,70 @@ def get_objects():
 
     return jsonify({'objects': rows, 'info': info}), 200
 
+
+@app.route('/userinfo', methods=['GET'])
+def get_user():
+    email = session.get('email')
+    if not email:
+        return jsonify({"message": "User not logged in"}), 401
+    
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    cursor.execute('SELECT Apellido,DNI,DireccionCorreo,FechaNacimiento,Nombre,password FROM informacion_Persona where DireccionCorreo = %s', (email,))
+    rows = cursor.fetchall()
+    cursor.close()
+    connection.close()
+    return jsonify({'user': rows}), 200
+
+@app.route('/modify_user', methods=['PATCH'])
+def modify_user():
+    email = session.get('email')
+    if not email:
+        return jsonify({"message": "User not logged in"}), 401
+
+    data = request.get_json()
+    fields_to_update = []
+    values = []
+
+    # Verificar y agregar los campos presentes en la solicitud
+    if 'Nombre' in data:
+        fields_to_update.append('Nombre = %s')
+        values.append(data['Nombre'])
+    if 'Apellido' in data:
+        fields_to_update.append('Apellido = %s')
+        values.append(data['Apellido'])
+    if 'DNI' in data:
+        fields_to_update.append('DNI = %s')
+        values.append(data['DNI'])
+    if 'DireccionCorreo' in data:
+        fields_to_update.append('DireccionCorreo = %s')
+        values.append(data['DireccionCorreo'])
+    if 'FechaNacimiento' in data:
+        fields_to_update.append('FechaNacimiento = %s')
+        values.append(data['FechaNacimiento'])
+    if 'password' in data:
+        fields_to_update.append('password = %s')
+        values.append(data['password'])
+
+    if not fields_to_update:
+        return jsonify({"message": "No fields to update"}), 400
+
+    # Agregar el email al final de los valores
+    values.append(email)
+
+    # Construir la consulta SQL
+    query = f"UPDATE informacion_Persona SET {', '.join(fields_to_update)} WHERE DireccionCorreo = %s"
+
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute(query, values)
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+    return jsonify({"message": "User updated successfully"}), 200 
+
+
 @app.route('/usuarios', methods=['GET'])
 def get_usuarios():
     connection = get_db_connection()
