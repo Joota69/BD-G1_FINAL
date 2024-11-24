@@ -9,8 +9,10 @@ async function loginUser(event) {
         headers: {
             'Content-Type': 'application/json'
         },
+        credentials: 'include', // IMPORTANTE
         body: JSON.stringify({ email, password })
     });
+    
 
     const result = await response.json();
 

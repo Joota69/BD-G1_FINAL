@@ -1,10 +1,10 @@
-from flask import Flask, request, session, jsonify
+from flask import Flask, jsonify, request,session
 from flask_cors import CORS
 import mysql.connector
 
 app = Flask(__name__)
-CORS(app)
-app.secret_key = 'your_secret_key'  # Configura una clave secreta para las sesiones
+CORS(app, supports_credentials=True)
+app.secret_key= 'e7ef771e4cf86b5663e2e973510f3cb63c769f2b3e7fe429'
 
 def get_db_connection():
     connection = mysql.connector.connect(
@@ -30,8 +30,9 @@ def get_data():
     connection.close()
 
     if rows:
-        session['email'] = email  # Guarda el email en la sesión
+        session['email'] = email
         return jsonify(rows), 200
+        
     else:
         return jsonify({"message": "Invalid email or password"}), 401
 
@@ -41,11 +42,11 @@ def create_user():
     DNI = "22334456"
     DireccionCorreo = "florian@example.com"
     FechaNacimiento = "1988-11-30"
-    Intercambio_idIntercambio = 1
-    Nombre = "Florian"
+    Intercambio_idIntercambio = None
+    Nombre = "MMHV"
     has_ticket = 0
-    idinformacion_Persona = 1
-    password = "password"
+    idinformacion_Persona = 123
+    password = "MMHV@2024"
 
     connection = get_db_connection()
     cursor = connection.cursor()
@@ -60,31 +61,29 @@ def create_user():
 
 @app.route('/get_objects', methods=['GET'])
 def get_objects():
-    email = session.get('email')  # Accede al email desde la sesión
-    if not email:
-        return {'message': 'No email found in session'}, 401
-
+    email = session.get('email')
+    print("Email en sesión:", session.get('email'))
+    print(request.cookies)
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
-
-    # Obtener datos de la tabla objeto
-    cursor.execute('SELECT Nombre, Descripcion FROM objeto')
-    objects = cursor.fetchall()
+    cursor.execute('SELECT Nombre,Descripcion FROM objeto')
+    rows = cursor.fetchall()
+    
+    cursor.execute('SELECT Nombre, DNI, DireccionCorreo, has_ticket FROM informacion_Persona WHERE DireccionCorreo = %s', (email,))
+    info = cursor.fetchall()
     cursor.close()
     connection.close()
+    return jsonify({'objects': rows,'info':info}), 200
 
-    return jsonify( objects), 200
-
-@app.route('/getuser', methods=['GET'])
-def get_user():
-    coneccion = get_db_connection()
-    cursor=coneccion.cursor(dictionary=True)
+@app.route('/usuarios', methods=['GET'])
+def get_usuarios():
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
     cursor.execute('SELECT * FROM informacion_Persona')
     rows = cursor.fetchall()
     cursor.close()
-    coneccion.close()
-    return jsonify(rows), 200
-
+    connection.close()
+    return jsonify({'usuarios': rows}), 200
 
 if __name__ == '__main__':
     app.run(debug=True)
