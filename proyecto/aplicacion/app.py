@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, request, session, make_response
 from flask_cors import CORS
 import mysql.connector
-import uuid  # Para generar un identificador único
+import uuid  
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
@@ -134,6 +134,23 @@ def modify_user():
 
     return jsonify({"message": "User updated successfully"}), 200 
 
+@app.route('/bancoObjetos', methods=['GET'])
+def get_banco_objetos():
+    email = session.get('email')
+    if not email:
+        return jsonify({"message": "User not logged in"}), 401
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    cursor.execute('SELECT Nombre, Descripcion FROM objeto o JOIN banco b ON o.idobjeto=b.objeto_idobjeto')
+    rows = cursor.fetchall()
+
+    cursor.execute('SELECT has_ticket FROM informacion_Persona WHERE DireccionCorreo = %s', (email,))
+    info = cursor.fetchall()
+
+    cursor.close()
+    connection.close()
+    return jsonify({'banco_objetos': rows,'info':info}), 200
+
 
 @app.route('/usuarios', methods=['GET'])
 def get_usuarios():
@@ -144,6 +161,16 @@ def get_usuarios():
     cursor.close()
     connection.close()
     return jsonify({'usuarios': rows}), 200
+
+@app.route('/objeto', methods=['GET'])
+def get_objeto():
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    cursor.execute('SELECT * FROM objeto')
+    rows = cursor.fetchall()
+    cursor.close()
+    connection.close()
+    return jsonify({'objetos': rows}), 200
 
 
 if __name__ == '__main__':
