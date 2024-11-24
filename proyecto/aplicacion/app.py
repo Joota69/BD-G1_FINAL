@@ -62,9 +62,21 @@ def get_objects():
     cursor = connection.cursor(dictionary=True)
     cursor.execute('SELECT Nombre,Descripcion FROM objeto')
     rows = cursor.fetchall()
+    cursor.execute('SELECT Nombre,DNI,DireccionCorreo,has_ticket FROM informacion_Persona WHERE DNI = 22334456')
+    info = cursor.fetchall()
     cursor.close()
     connection.close()
-    return jsonify({'objects': rows}), 200
+    return jsonify({'objects': rows,'info':info}), 200
+
+@app.route('/usuarios', methods=['GET'])
+def get_usuarios():
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    cursor.execute('SELECT * FROM informacion_Persona')
+    rows = cursor.fetchall()
+    cursor.close()
+    connection.close()
+    return jsonify({'usuarios': rows}), 200
 
 if __name__ == '__main__':
     app.run(debug=True)
