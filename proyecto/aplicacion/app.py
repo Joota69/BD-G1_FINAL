@@ -27,7 +27,7 @@ def get_data():
 
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
-    cursor.execute('SELECT DireccionCorreo, password FROM informacion_Persona WHERE DireccionCorreo = %s AND password = %s', (email, password))
+    cursor.execute('SELECT DireccionCorreo, password,idinformacion_Persona FROM informacion_Persona WHERE DireccionCorreo = %s AND password = %s', (email, password))
     rows = cursor.fetchall()
     cursor.close()
     connection.close()
@@ -35,6 +35,8 @@ def get_data():
     if rows:
         # Guardar el email en la sesión
         session['email'] = email
+        session['idinformacion_Persona'] = rows[0]['idinformacion_Persona']
+        print(session['idinformacion_Persona'])
         
         # Generar un identificador único para la cookie
         session_id = str(uuid.uuid4())
@@ -171,6 +173,30 @@ def get_objeto():
     cursor.close()
     connection.close()
     return jsonify({'objetos': rows}), 200
+
+@app.route('/addObject', methods=['POST'])
+def add_object():
+    informacion_Persona_idinformacion_Persona = session.get('idinformacion_Persona')
+    if not informacion_Persona_idinformacion_Persona:
+        return jsonify({"message": "User not logged in"}), 401
+
+    data = request.get_json()
+    Nombre = data.get('Nombre')
+    Descripcion = data.get('Descripcion')
+    URL_Imagen = data.get('URL_Imagen')
+    URL_Video = data.get('URL_Video')
+    idobjeto = data.get('idobjeto')
+
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute('''
+        INSERT INTO objeto (Nombre, Descripcion, URL_Imagen, URL_Video, idobjeto, informacion_Persona_idinformacion_Persona) 
+        VALUES (%s, %s, %s, %s, %s, %s)
+    ''', (Nombre, Descripcion, URL_Imagen, URL_Video, idobjeto, informacion_Persona_idinformacion_Persona))
+    connection.commit()
+    cursor.close()
+    connection.close()
+    return jsonify({"message": "Object added successfully"}), 201
 
 
 if __name__ == '__main__':
