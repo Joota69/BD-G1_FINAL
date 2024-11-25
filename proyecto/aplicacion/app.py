@@ -7,7 +7,8 @@ app = Flask(__name__)
 CORS(app, supports_credentials=True)
 app.secret_key = 'e7ef771e4cf86b5663e2e973510f3cb63c769f2b3e7fe429'
 
-
+# ================================================================================================================
+# Conexión para base de datos relacionales
 def get_db_connection():
     connection = mysql.connector.connect(
         host='autorack.proxy.rlwy.net',
@@ -18,6 +19,27 @@ def get_db_connection():
     )
     return connection
 
+# ======================================================================================================================
+# Clase para manejar la conexión con Neo4j
+class Neo4jConnection:
+    def __init__(self, uri, user, password):
+        self.driver = GraphDatabase.driver(uri, auth=(user, password))
+
+    def close(self):
+        self.driver.close()
+
+    def execute_query(self, query, parameters=None):
+        with self.driver.session() as session:
+            result = session.run(query, parameters)
+            return [record for record in result]
+
+# Configuración de la conexión a Neo4j
+neo4j_conn = Neo4jConnection(
+    uri=os.getenv("NEO4J_URI", "bolt://3.215.175.176:7687"),
+    user=os.getenv("NEO4J_USER", "neo4j"),
+    password=os.getenv("NEO4J_PASSWORD", "algebra-railway-slates")
+)
+# ======================================================================================================================
 
 @app.route('/data', methods=['POST'])
 def get_data():
@@ -48,6 +70,60 @@ def get_data():
         return response, 200
     else:
         return jsonify({"message": "Invalid email or password"}), 401
+
+
+@app.route('/create_user', methods=['POST'])
+def create_user():
+    data = request.get_json()
+
+    # Validación de datos obligatorios
+    required_fields = ['DNI', 'DireccionCorreo', 'FechaNacimiento', 'Nombre', 'Apellido', 'password']
+    for field in required_fields:
+        if not data.get(field):
+            return jsonify({"message": f"{field} is required"}), 400
+
+    # Variables
+    DNI = data['DNI']
+    DireccionCorreo = data['DireccionCorreo']
+    FechaNacimiento = data['FechaNacimiento']
+    Nombre = data['Nombre']
+    Apellido = data['Apellido']
+    password = data['password']
+
+    # Inserción en ambas bases
+    try:
+        # 1. Inserta en MySQL
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        cursor.execute('''
+            INSERT INTO informacion_Persona (DNI, DireccionCorreo, FechaNacimiento, Nombre, Apellido, password)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        ''', (DNI, DireccionCorreo, FechaNacimiento, Nombre, Apellido, password))
+        connection.commit()
+        
+        # 2. Inserta en Neo4j
+        query = '''
+        CREATE (p:PERSONA { dni: $dni, correo: $correo, name: $name, apellido: $apellido})
+        RETURN p
+        '''
+        neo4j_conn.execute_query(query, {
+            "dni": DNI,
+            "correo": DireccionCorreo,
+            "name": Nombre,
+            "apellido": Apellido
+        })
+
+        return jsonify({"message": "User created successfully"}), 201
+
+    except Exception as e:
+        print(f"Error al crear usuario: {e}")  # Añade esta línea
+        return jsonify({"message": f"Error creating user: {str(e)}"}), 500
+
+    
+
+    finally:
+        cursor.close()
+        connection.close()
 
 
 @app.route('/get_objects', methods=['GET'])
@@ -88,6 +164,8 @@ def get_user():
     connection.close()
     return jsonify({'user': rows}), 200
 
+
+
 @app.route('/modify_user', methods=['PATCH'])
 def modify_user():
     email = session.get('email')
@@ -117,7 +195,6 @@ def modify_user():
     if 'password' in data:
         fields_to_update.append('password = %s')
         values.append(data['password'])
-
     if not fields_to_update:
         return jsonify({"message": "No fields to update"}), 400
 
@@ -135,6 +212,8 @@ def modify_user():
     connection.close()
 
     return jsonify({"message": "User updated successfully"}), 200 
+
+
 
 @app.route('/bancoObjetos', methods=['GET'])
 def get_banco_objetos():
