@@ -95,7 +95,6 @@
             <button>Banco</button>
         </a>
         <button id="add-object-button">Agregar Objeto</button>
-        <hr>
         <div id="user-container"></div>
         <hr>
         <div class="products-container" id="products-container"></div>
@@ -119,6 +118,15 @@
                 
                 <label for="idobjeto">ID del Objeto:</label>
                 <input type="number" id="idobjeto" name="idobjeto" required>
+                
+                <label for="estado_estetico">Estado Estético del 1 al 5 (5 es nuevo):</label>
+                <input type="text" id="estado_estetico" name="estado_estetico" required>
+                
+                <label for="estado_funcional">Estado Funcional del 1 a 5 (5 es nuevo):</label>
+                <input type="text" id="estado_funcional" name="estado_funcional" required>
+                
+                <label for="estado_garantia">Estado de Garantía(1 si ofrece garantia y 0 si no):</label>
+                <input type="text" id="estado_garantia" name="estado_garantia" required>
                 
                 <button type="submit">Guardar Objeto</button>
             </form>

@@ -267,18 +267,91 @@ def add_object():
     URL_Imagen = data.get('URL_Imagen')
     URL_Video = data.get('URL_Video')
     idobjeto = data.get('idobjeto')
+    estado_estetico = data.get('estado_estetico')
+    estado_funcional = data.get('estado_funcional')
+    estado_garantia = data.get('estado_garantia')
 
     connection = get_db_connection()
     cursor = connection.cursor()
-    cursor.execute('''
-        INSERT INTO objeto (Nombre, Descripcion, URL_Imagen, URL_Video, idobjeto, informacion_Persona_idinformacion_Persona) 
-        VALUES (%s, %s, %s, %s, %s, %s)
-    ''', (Nombre, Descripcion, URL_Imagen, URL_Video, idobjeto, informacion_Persona_idinformacion_Persona))
-    connection.commit()
-    cursor.close()
-    connection.close()
-    return jsonify({"message": "Object added successfully"}), 201
 
+    try:
+        # Insertar en la tabla objeto
+        cursor.execute('''
+            INSERT INTO objeto (Nombre, Descripcion, URL_Imagen, URL_Video, idobjeto, informacion_Persona_idinformacion_Persona) 
+            VALUES (%s, %s, %s, %s, %s, %s)
+        ''', (Nombre, Descripcion, URL_Imagen, URL_Video, idobjeto, informacion_Persona_idinformacion_Persona))
+        
+        # Insertar en la tabla reseñas_objetos
+        cursor.execute('''
+            INSERT INTO reseñas_objetos (objeto_idobjeto, estado_estético, estado_funcional, estado_garantia) 
+            VALUES (%s, %s, %s, %s)
+        ''', (idobjeto, estado_estetico, estado_funcional, estado_garantia))
+        
+        connection.commit()
+    except mysql.connector.Error as err:
+        connection.rollback()
+        return jsonify({"message": f"Error: {err}"}), 500
+    finally:
+        cursor.close()
+        connection.close()
+
+    return jsonify({"message": "Object and review added successfully"}), 201
+
+@app.route('/addObjectbank', methods=['POST'])
+def add_objectbank():
+    informacion_Persona_idinformacion_Persona = session.get('idinformacion_Persona')
+    if not informacion_Persona_idinformacion_Persona:
+        return jsonify({"message": "User not logged in"}), 401
+    idinformacion_Persona=session.get('idinformacion_Persona')
+    if not idinformacion_Persona:
+        return jsonify({"message": "User not logged in"}), 401
+
+    data = request.get_json()
+    Nombre = data.get('Nombre')
+    Descripcion = data.get('Descripcion')
+    URL_Imagen = data.get('URL_Imagen')
+    URL_Video = data.get('URL_Video')
+    idobjeto = data.get('idobjeto')
+    estado_estetico = data.get('estado_estetico')
+    estado_funcional = data.get('estado_funcional')
+    estado_garantia = data.get('estado_garantia')
+
+    connection = get_db_connection()
+    cursor = connection.cursor()
+
+    try:
+        # Insertar en la tabla objeto
+        cursor.execute('''
+            INSERT INTO objeto (Nombre, Descripcion, URL_Imagen, URL_Video, idobjeto, informacion_Persona_idinformacion_Persona) 
+            VALUES (%s, %s, %s, %s, %s, %s)
+        ''', (Nombre, Descripcion, URL_Imagen, URL_Video, idobjeto, informacion_Persona_idinformacion_Persona))
+        
+        # Insertar en la tabla reseñas_objetos
+        cursor.execute('''
+            INSERT INTO reseñas_objetos (objeto_idobjeto, estado_estético, estado_funcional, estado_garantia) 
+            VALUES (%s, %s, %s, %s)
+        ''', (idobjeto, estado_estetico, estado_funcional, estado_garantia))
+        # Modificar has_ticket
+        cursor.execute('''
+            UPDATE informacion_Persona 
+            SET has_ticket = has_ticket + 1 
+            WHERE idinformacion_Persona = %s
+        ''', (idinformacion_Persona,))
+
+        cursor.execute('''
+            INSERT INTO banco ( dejado_por,objeto_idobjeto) 
+            VALUES (%s,%s)
+        ''', (idinformacion_Persona,idobjeto))
+
+        connection.commit()
+    except mysql.connector.Error as err:
+        connection.rollback()
+        return jsonify({"message": f"Error: {err}"}), 500
+    finally:
+        cursor.close()
+        connection.close()
+
+    return jsonify({"message": "Object and review added successfully"}), 201
 
 if __name__ == '__main__':
     app.run(debug=True)

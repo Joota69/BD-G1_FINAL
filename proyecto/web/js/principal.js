@@ -33,7 +33,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             Descripcion: formData.get('descripcion'),
             URL_Imagen: formData.get('url_imagen'),
             URL_Video: formData.get('url_video'),
-            idobjeto: formData.get('idobjeto')
+            idobjeto: formData.get('idobjeto'),
+            estado_estetico: formData.get('estado_estetico'),
+            estado_funcional: formData.get('estado_funcional'),
+            estado_garantia: formData.get('estado_garantia')
+       
         };
 
         try {
