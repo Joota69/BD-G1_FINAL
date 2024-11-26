@@ -42,7 +42,7 @@ neo4j_conn = Neo4jConnection(
     password=os.getenv("NEO4J_PASSWORD", "algebra-railway-slates")
 )
 # ======================================================================================================================
-
+# Inicio de sesión
 @app.route('/data', methods=['POST'])
 def get_data():
     data = request.get_json()
@@ -73,7 +73,7 @@ def get_data():
     else:
         return jsonify({"message": "Invalid email or password"}), 401
 
-
+# Crear usuario
 @app.route('/create_user', methods=['POST'])
 def create_user():
     data = request.get_json()
@@ -127,7 +127,7 @@ def create_user():
         cursor.close()
         connection.close()
 
-
+# Obtener objetos
 @app.route('/get_objects', methods=['GET'])
 def get_objects():
     # Recuperar el email desde la sesión
@@ -151,7 +151,7 @@ def get_objects():
 
     return jsonify({'objects': rows, 'info': info}), 200
 
-
+#Obtener información de usuario
 @app.route('/userinfo', methods=['GET'])
 def get_user():
     email = session.get('email')
@@ -160,14 +160,14 @@ def get_user():
     
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
-    cursor.execute('SELECT Apellido,DNI,DireccionCorreo,FechaNacimiento,Nombre,password FROM informacion_Persona where DireccionCorreo = %s', (email,))
+    cursor.execute('SELECT DNI,DireccionCorreo,FechaNacimiento,Nombre,password FROM informacion_Persona where DireccionCorreo = %s', (email,))
     rows = cursor.fetchall()
     cursor.close()
     connection.close()
     return jsonify({'user': rows}), 200
 
 
-
+# Modificar usuario
 @app.route('/modify_user', methods=['PATCH'])
 def modify_user():
     email = session.get('email')
@@ -216,7 +216,7 @@ def modify_user():
     return jsonify({"message": "User updated successfully"}), 200 
 
 
-
+# Objetos en banco
 @app.route('/bancoObjetos', methods=['GET'])
 def get_banco_objetos():
     email = session.get('email')
@@ -255,6 +255,8 @@ def get_objeto():
     connection.close()
     return jsonify({'objetos': rows}), 200
 
+
+#Agregar objetos
 @app.route('/addObject', methods=['POST'])
 def add_object():
     informacion_Persona_idinformacion_Persona = session.get('idinformacion_Persona')
@@ -266,7 +268,7 @@ def add_object():
     Descripcion = data.get('Descripcion')
     URL_Imagen = data.get('URL_Imagen')
     URL_Video = data.get('URL_Video')
-    idobjeto = data.get('idobjeto')
+    categoria = data.get('categoria')
     estado_estetico = data.get('estado_estetico')
     estado_funcional = data.get('estado_funcional')
     estado_garantia = data.get('estado_garantia')
@@ -277,9 +279,12 @@ def add_object():
     try:
         # Insertar en la tabla objeto
         cursor.execute('''
-            INSERT INTO objeto (Nombre, Descripcion, URL_Imagen, URL_Video, idobjeto, informacion_Persona_idinformacion_Persona) 
+            INSERT INTO objeto (Nombre, Descripcion, URL_Imagen, URL_Video, informacion_Persona_idinformacion_Persona, categoria) 
             VALUES (%s, %s, %s, %s, %s, %s)
-        ''', (Nombre, Descripcion, URL_Imagen, URL_Video, idobjeto, informacion_Persona_idinformacion_Persona))
+        ''', (Nombre, Descripcion, URL_Imagen, URL_Video, informacion_Persona_idinformacion_Persona, categoria))
+        
+        # Obtener el id del objeto recién insertado
+        idobjeto = cursor.lastrowid
         
         # Insertar en la tabla reseñas_objetos
         cursor.execute('''
@@ -297,13 +302,12 @@ def add_object():
 
     return jsonify({"message": "Object and review added successfully"}), 201
 
+#Agregar objetos al banco
+#Agregar objetos al banco
 @app.route('/addObjectbank', methods=['POST'])
 def add_objectbank():
     informacion_Persona_idinformacion_Persona = session.get('idinformacion_Persona')
     if not informacion_Persona_idinformacion_Persona:
-        return jsonify({"message": "User not logged in"}), 401
-    idinformacion_Persona=session.get('idinformacion_Persona')
-    if not idinformacion_Persona:
         return jsonify({"message": "User not logged in"}), 401
 
     data = request.get_json()
@@ -311,7 +315,7 @@ def add_objectbank():
     Descripcion = data.get('Descripcion')
     URL_Imagen = data.get('URL_Imagen')
     URL_Video = data.get('URL_Video')
-    idobjeto = data.get('idobjeto')
+    categoria = data.get('categoria')
     estado_estetico = data.get('estado_estetico')
     estado_funcional = data.get('estado_funcional')
     estado_garantia = data.get('estado_garantia')
@@ -322,26 +326,31 @@ def add_objectbank():
     try:
         # Insertar en la tabla objeto
         cursor.execute('''
-            INSERT INTO objeto (Nombre, Descripcion, URL_Imagen, URL_Video, idobjeto, informacion_Persona_idinformacion_Persona) 
+            INSERT INTO objeto (Nombre, Descripcion, URL_Imagen, URL_Video, informacion_Persona_idinformacion_Persona, categoria) 
             VALUES (%s, %s, %s, %s, %s, %s)
-        ''', (Nombre, Descripcion, URL_Imagen, URL_Video, idobjeto, informacion_Persona_idinformacion_Persona))
+        ''', (Nombre, Descripcion, URL_Imagen, URL_Video, informacion_Persona_idinformacion_Persona, categoria))
+        
+        # Obtener el id del objeto recién insertado
+        idobjeto = cursor.lastrowid
         
         # Insertar en la tabla reseñas_objetos
         cursor.execute('''
             INSERT INTO reseñas_objetos (objeto_idobjeto, estado_estético, estado_funcional, estado_garantia) 
             VALUES (%s, %s, %s, %s)
         ''', (idobjeto, estado_estetico, estado_funcional, estado_garantia))
+        
         # Modificar has_ticket
         cursor.execute('''
             UPDATE informacion_Persona 
             SET has_ticket = has_ticket + 1 
             WHERE idinformacion_Persona = %s
-        ''', (idinformacion_Persona,))
-
+        ''', (informacion_Persona_idinformacion_Persona,))
+        
+        # Insertar en la tabla banco
         cursor.execute('''
-            INSERT INTO banco ( dejado_por,objeto_idobjeto) 
-            VALUES (%s,%s)
-        ''', (idinformacion_Persona,idobjeto))
+            INSERT INTO banco (dejado_por, objeto_idobjeto) 
+            VALUES (%s, %s)
+        ''', (informacion_Persona_idinformacion_Persona, idobjeto))
 
         connection.commit()
     except mysql.connector.Error as err:

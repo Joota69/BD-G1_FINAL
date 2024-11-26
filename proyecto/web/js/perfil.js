@@ -22,9 +22,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const name = document.createElement('p');
         name.innerHTML = `Nombre: ${user.Nombre || ''} <a class="change-link" data-field="nombre">Cambiar</a>`;
 
-        const apellido = document.createElement('p');
-        apellido.innerHTML = `Apellido: ${user.Apellido || ''} <a class="change-link" data-field="apellido">Cambiar</a>`;
-
         const email = document.createElement('p');
         email.innerHTML = `Email: ${user.DireccionCorreo || ''} <a class="change-link" data-field="email">Cambiar</a>`;
 
@@ -35,7 +32,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         fechaNacimiento.innerHTML = `Fecha de Nacimiento: ${user.FechaNacimiento ? new Date(user.FechaNacimiento).toISOString().split('T')[0] : ''} <a class="change-link" data-field="fechaNacimiento">Cambiar</a>`;
 
         userContainer.appendChild(name);
-        userContainer.appendChild(apellido);
+        
         userContainer.appendChild(email);
         userContainer.appendChild(dni);
         userContainer.appendChild(fechaNacimiento);
@@ -57,7 +54,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const formData = new FormData(modifyForm);
             const data = {
                 Nombre: formData.get('nombre') || '',
-                Apellido: formData.get('apellido') || '',
+                
                 DireccionCorreo: formData.get('email') || '',
                 DNI: formData.get('dni') || '',
                 FechaNacimiento: formData.get('fechaNacimiento') || '',
