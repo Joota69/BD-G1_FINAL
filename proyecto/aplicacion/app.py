@@ -141,7 +141,7 @@ def create_user():
                 "user_id": user_id,  # Usar el id de MySQL
                 "dni": DNI,
                 "correo": DireccionCorreo,
-                "name": Nombre,
+                "name": Nombre
             })
 
         connection.commit()
@@ -182,7 +182,7 @@ def add_object():
     cursor = connection.cursor()
 
     try:
-        # Insertar en la tabla objeto
+        # Insertar  un objeto en la tabla objeto
         cursor.execute('''
             INSERT INTO objeto (Nombre, Descripcion, URL_Imagen, URL_Video, informacion_Persona_idinformacion_Persona, categoria) 
             VALUES (%s, %s, %s, %s, %s, %s)
@@ -191,11 +191,44 @@ def add_object():
         # Obtener el id del objeto recién insertado
         idobjeto = cursor.lastrowid
         
-        # Insertar en la tabla reseñas_objetos
+        # 2. Inserta en Neo4j el objeto de la persona
+        query = '''
+        MERGE (p:PERSONA { id: $user_id})
+        MERGE (o:OBJETO { name: $name,id: $id,descripcion: $descripcion, url_imagen: $url_imagen, url_video: $url_video, categoria: $categoria})
+        MERGE (p)-[:TIENE]->(o)
+        RETURN p, o
+        '''
+        neo4j_conn.execute_query(query, {
+            "user_id": informacion_Persona_idinformacion_Persona,
+            "name": Nombre,
+            "id": idobjeto,
+            "descripcion": Descripcion,
+            "url_imagen": URL_Imagen,
+            "url_video": URL_Video,
+            "categoria": categoria
+            
+            
+        })
+            
+      
+        # Insertar una reseña la tabla reseñas_objetos
         cursor.execute('''
             INSERT INTO reseñas_objetos (objeto_idobjeto, estado_estético, estado_funcional, estado_garantia) 
             VALUES (%s, %s, %s, %s)
         ''', (idobjeto, estado_estetico, estado_funcional, estado_garantia))
+        
+        query = '''
+        MATCH (o:OBJETO { id: $id})
+        MERGE (r:RESEÑA {estado_estetico: $estado_estetico, estado_funcional: $estado_funcional, estado_garantia: $estado_garantia})
+        MERGE (o)-[:TIENE_RESEÑA]->(r)
+        '''
+        neo4j_conn.execute_query(query, {
+            "id": idobjeto,
+            "estado_estetico": estado_estetico,
+            "estado_funcional": estado_funcional,
+            "estado_garantia": estado_garantia
+        })
+        
         
         connection.commit()
     except mysql.connector.Error as err:
