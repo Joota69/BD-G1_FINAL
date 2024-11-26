@@ -37,9 +37,9 @@ class Neo4jConnection:
 
 # Configuración de la conexión a Neo4j
 neo4j_conn = Neo4jConnection(
-    uri=os.getenv("NEO4J_URI", "bolt://44.200.231.186:7687"),
+    uri=os.getenv("NEO4J_URI", "bolt://3.93.149.233:7687"),
     user=os.getenv("NEO4J_USER", "neo4j"),
-    password=os.getenv("NEO4J_PASSWORD", "sentries-scab-rowboats")
+    password=os.getenv("NEO4J_PASSWORD", "rushes-skills-subsystems")
 )
 # ======================================================================================================================
 # Inicio de sesión
@@ -344,7 +344,54 @@ def get_user():
     connection.close()
     return jsonify({'user': rows}), 200
 
+#Eliminar usuario
+@app.route('/delete_user', methods=['DELETE'])
+def delete_user():
+    email = session.get('email')  # Obtener el correo del usuario autenticado
+    if not email:
+        return jsonify({"message": "User not logged in"}), 401
 
+    # Obtener el ID del usuario desde la base de datos relacional (MySQL)
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    cursor.execute("SELECT idinformacion_Persona FROM informacion_Persona WHERE DireccionCorreo = %s", (email,))
+    user = cursor.fetchone()
+
+    if not user:
+        return jsonify({"message": "User not found"}), 404
+
+    user_id = user['idinformacion_Persona']
+
+    try:
+        # 1. Eliminar las relaciones y el nodo en Neo4j
+        neo4j_conn.execute_query('''
+            MATCH (n:PERSONA {id: $user_id})-[r]-(nodo_relacionado)
+            DETACH DELETE n, nodo_relacionado
+        ''', {"user_id": user_id})
+
+        # 2. Eliminar los datos del usuario en MySQL
+        cursor.execute("DELETE FROM reseñas_objetos WHERE objeto_idobjeto IN (SELECT idobjeto FROM objeto WHERE informacion_Persona_idinformacion_Persona = %s)", (user_id,))
+        cursor.execute("DELETE FROM objeto WHERE informacion_Persona_idinformacion_Persona = %s", (user_id,))
+        cursor.execute("DELETE FROM banco WHERE dejado_por = %s", (user_id,))
+        cursor.execute("DELETE FROM direccion_Persona WHERE informacion_Persona_idinformacion_Persona = %s", (user_id,))
+        cursor.execute("DELETE FROM informacion_Persona WHERE idinformacion_Persona = %s", (user_id,))
+
+        connection.commit()
+
+        return jsonify({"message": "User and associated data deleted successfully"}), 200
+
+    except Exception as e:
+        connection.rollback()
+        print(f"Error deleting user: {e}")
+        return jsonify({"message": f"Error deleting user: {str(e)}"}), 500
+
+    finally:
+        cursor.close()
+        connection.close()
+
+
+# Modificar usuario
 @app.route('/modify_user', methods=['PATCH'])
 def modify_user():
     email = session.get('email')  # Obtener el correo del usuario autenticado

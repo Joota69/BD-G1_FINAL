@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const userContainer = document.getElementById('user-container');
     const formContainer = document.getElementById('form-container');
     const modifyForm = document.getElementById('modify-form');
+    const deleteButton = document.getElementById('delete-button');  // Nuevo botón para eliminar
 
     try {
         const response = await fetch('http://127.0.0.1:5000/userinfo', {
@@ -100,6 +101,32 @@ document.addEventListener('DOMContentLoaded', async () => {
                 alert('Error updating user');
             }
         });
+
+        // Agregar la funcionalidad de eliminar cuenta
+        deleteButton.addEventListener('click', async () => {
+            const confirmation = confirm("¿Estás seguro de que deseas eliminar tu cuenta? Esta acción no puede deshacerse.");
+            if (!confirmation) return;
+
+            try {
+                const response = await fetch('http://127.0.0.1:5000/delete_user', {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    alert('Cuenta eliminada exitosamente');
+                    // Redirigir al usuario a la página principal o de login
+                    window.location.href = 'login.html'; // O la URL que prefieras
+                } else {
+                    const errorData = await response.json();
+                    alert(`Error: ${errorData.message}`);
+                }
+            } catch (error) {
+                console.error('Error deleting user:', error);
+                alert('Error deleting user');
+            }
+        });
+        
     } catch (error) {
         console.error('Error fetching user info:', error);
         userContainer.innerHTML = '<p>Error fetching user info</p>';
