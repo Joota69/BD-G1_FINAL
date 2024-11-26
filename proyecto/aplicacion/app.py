@@ -79,7 +79,7 @@ def create_user():
     data = request.get_json()
 
     # Validación de datos obligatorios
-    required_fields = ['DNI', 'DireccionCorreo', 'FechaNacimiento', 'Nombre', 'Apellido', 'password']
+    required_fields = ['DNI', 'DireccionCorreo', 'FechaNacimiento', 'Nombre', 'password']
     for field in required_fields:
         if not data.get(field):
             return jsonify({"message": f"{field} is required"}), 400
@@ -89,8 +89,12 @@ def create_user():
     DireccionCorreo = data['DireccionCorreo']
     FechaNacimiento = data['FechaNacimiento']
     Nombre = data['Nombre']
-    Apellido = data['Apellido']
     password = data['password']
+
+    Departamento = data.get('Departamento')
+    Provincia = data.get('Provincia')
+    Distrito = data.get('Distrito')
+    Direccion = data.get('Direccion')
 
     # Inserción en ambas bases
     try:
@@ -98,21 +102,29 @@ def create_user():
         connection = get_db_connection()
         cursor = connection.cursor()
         cursor.execute('''
-            INSERT INTO informacion_Persona (DNI, DireccionCorreo, FechaNacimiento, Nombre, Apellido, password)
-            VALUES (%s, %s, %s, %s, %s, %s)
-        ''', (DNI, DireccionCorreo, FechaNacimiento, Nombre, Apellido, password))
+            INSERT INTO informacion_Persona (DNI, DireccionCorreo, FechaNacimiento, Nombre, password)
+            VALUES (%s, %s, %s, %s, %s)
+        ''', (DNI, DireccionCorreo, FechaNacimiento, Nombre, password))
+        user_id = cursor.lastrowid
+
+        # Insertar en direccion_Persona si hay datos
+        if Departamento or Provincia or Distrito or Direccion:
+            cursor.execute('''
+                INSERT INTO direccion_Persona (informacion_Persona_idinformacion_Persona, direccion, departamento, provincia, distrito)
+                VALUES (%s, %s, %s, %s, %s)
+            ''', (user_id, Direccion, Departamento, Provincia, Distrito))
+
         connection.commit()
         
         # 2. Inserta en Neo4j
         query = '''
-        CREATE (p:PERSONA { dni: $dni, correo: $correo, name: $name, apellido: $apellido})
+        CREATE (p:PERSONA { dni: $dni, correo: $correo, name: $name})
         RETURN p
         '''
         neo4j_conn.execute_query(query, {
             "dni": DNI,
             "correo": DireccionCorreo,
             "name": Nombre,
-            "apellido": Apellido
         })
 
         return jsonify({"message": "User created successfully"}), 201
@@ -160,61 +172,117 @@ def get_user():
     
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
-    cursor.execute('SELECT DNI,DireccionCorreo,FechaNacimiento,Nombre,password FROM informacion_Persona where DireccionCorreo = %s', (email,))
+    
+    # Consulta optimizada con LEFT JOIN
+    cursor.execute('''
+        SELECT 
+            iP.DNI,
+            iP.DireccionCorreo,
+            iP.FechaNacimiento,
+            iP.Nombre,
+            iP.password,
+            dP.direccion,
+            dP.departamento,
+            dP.provincia,
+            dP.distrito
+        FROM 
+            informacion_Persona iP
+        LEFT JOIN 
+            direccion_Persona dP 
+        ON 
+            iP.idinformacion_Persona = dP.informacion_Persona_idinformacion_Persona
+        WHERE 
+            iP.DireccionCorreo = %s
+    ''', (email,))
+
     rows = cursor.fetchall()
     cursor.close()
     connection.close()
     return jsonify({'user': rows}), 200
 
 
-# Modificar usuario
 @app.route('/modify_user', methods=['PATCH'])
 def modify_user():
-    email = session.get('email')
+    email = session.get('email')  # Obtener el correo del usuario autenticado
     if not email:
         return jsonify({"message": "User not logged in"}), 401
 
     data = request.get_json()
-    fields_to_update = []
-    values = []
+    fields_to_update_persona = []
+    values_persona = []
+    fields_to_update_direccion = []
+    values_direccion = []
 
-    # Verificar y agregar los campos presentes en la solicitud
-    if 'Nombre' in data:
-        fields_to_update.append('Nombre = %s')
-        values.append(data['Nombre'])
-    if 'Apellido' in data:
-        fields_to_update.append('Apellido = %s')
-        values.append(data['Apellido'])
-    if 'DNI' in data:
-        fields_to_update.append('DNI = %s')
-        values.append(data['DNI'])
-    if 'DireccionCorreo' in data:
-        fields_to_update.append('DireccionCorreo = %s')
-        values.append(data['DireccionCorreo'])
-    if 'FechaNacimiento' in data:
-        fields_to_update.append('FechaNacimiento = %s')
-        values.append(data['FechaNacimiento'])
-    if 'password' in data:
-        fields_to_update.append('password = %s')
-        values.append(data['password'])
-    if not fields_to_update:
-        return jsonify({"message": "No fields to update"}), 400
-
-    # Agregar el email al final de los valores
-    values.append(email)
-
-    # Construir la consulta SQL
-    query = f"UPDATE informacion_Persona SET {', '.join(fields_to_update)} WHERE DireccionCorreo = %s"
-
+    # Conexión a la base de datos
     connection = get_db_connection()
     cursor = connection.cursor()
-    cursor.execute(query, values)
-    connection.commit()
-    cursor.close()
-    connection.close()
 
-    return jsonify({"message": "User updated successfully"}), 200 
+    try:
+        # Verificar que el usuario existe en la tabla `informacion_persona`
+        cursor.execute("SELECT idinformacion_persona FROM informacion_Persona WHERE DireccionCorreo = %s", (email,))
+        user = cursor.fetchone()
+        if not user:
+            return jsonify({"message": "User not found"}), 404
+        user_id = user[0]  # Obtener el ID del usuario (clave foránea en `direccion_persona`)
 
+        # Actualización de `informacion_persona`
+        if 'Nombre' in data:
+            fields_to_update_persona.append('Nombre = %s')
+            values_persona.append(data['Nombre'])
+        if 'DNI' in data:
+            fields_to_update_persona.append('DNI = %s')
+            values_persona.append(data['DNI'])
+        if 'DireccionCorreo' in data:
+            fields_to_update_persona.append('DireccionCorreo = %s')
+            values_persona.append(data['DireccionCorreo'])
+        if 'FechaNacimiento' in data:
+            fields_to_update_persona.append('FechaNacimiento = %s')
+            values_persona.append(data['FechaNacimiento'])
+        if 'password' in data and data['password']:
+            fields_to_update_persona.append('password = %s')
+            values_persona.append(data['password'])
+
+        # Si hay campos para actualizar en `informacion_persona`
+        if fields_to_update_persona:
+            query_persona = f"UPDATE informacion_Persona SET {', '.join(fields_to_update_persona)} WHERE DireccionCorreo = %s"
+            values_persona.append(email)
+            cursor.execute(query_persona, values_persona)
+
+            if 'DireccionCorreo' in data:
+                session['email'] = data['DireccionCorreo']
+
+        # Actualización de `direccion_persona`
+        if 'direccion' in data:
+            fields_to_update_direccion.append('direccion = %s')
+            values_direccion.append(data['direccion'])
+        if 'departamento' in data:
+            fields_to_update_direccion.append('departamento = %s')
+            values_direccion.append(data['departamento'])
+        if 'provincia' in data:
+            fields_to_update_direccion.append('provincia = %s')
+            values_direccion.append(data['provincia'])
+        if 'distrito' in data:
+            fields_to_update_direccion.append('distrito = %s')
+            values_direccion.append(data['distrito'])
+
+        # Si hay campos para actualizar en `direccion_persona`
+        if fields_to_update_direccion:
+            query_direccion = f"UPDATE direccion_Persona SET {', '.join(fields_to_update_direccion)} WHERE informacion_persona_idinformacion_persona = %s"
+            values_direccion.append(user_id)
+            cursor.execute(query_direccion, values_direccion)
+
+        # Confirmar cambios
+        connection.commit()
+
+    except Exception as e:
+        print(f"Error al modificar usuario: {e}")
+        return jsonify({"message": "Internal server error"}), 500
+
+    finally:
+        cursor.close()
+        connection.close()
+
+    return jsonify({"message": "User updated successfully"}), 200
 
 # Objetos en banco
 @app.route('/bancoObjetos', methods=['GET'])

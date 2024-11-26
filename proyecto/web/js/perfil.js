@@ -15,27 +15,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         const data = await response.json();
         const user = data['user'][0];
 
-        // Agrega un console.log para ver los datos que llegan a data['user']
+        // Guardar los datos del usuario en localStorage
+        localStorage.setItem('user', JSON.stringify(user));
         console.log('Datos de user:', user);
 
         // Mostrar información del usuario con botones "Cambiar"
-        const name = document.createElement('p');
-        name.innerHTML = `Nombre: ${user.Nombre || ''} <a class="change-link" data-field="nombre">Cambiar</a>`;
-
-        const email = document.createElement('p');
-        email.innerHTML = `Email: ${user.DireccionCorreo || ''} <a class="change-link" data-field="email">Cambiar</a>`;
-
-        const dni = document.createElement('p');
-        dni.innerHTML = `DNI: ${user.DNI || ''} <a class="change-link" data-field="dni">Cambiar</a>`;
-
-        const fechaNacimiento = document.createElement('p');
-        fechaNacimiento.innerHTML = `Fecha de Nacimiento: ${user.FechaNacimiento ? new Date(user.FechaNacimiento).toISOString().split('T')[0] : ''} <a class="change-link" data-field="fechaNacimiento">Cambiar</a>`;
-
-        userContainer.appendChild(name);
-        
-        userContainer.appendChild(email);
-        userContainer.appendChild(dni);
-        userContainer.appendChild(fechaNacimiento);
+        userContainer.innerHTML = `
+            <p>Nombre: ${user.Nombre || ''} <a class="change-link" data-field="nombre">Cambiar</a></p>
+            <p>Email: ${user.DireccionCorreo || ''} <a class="change-link" data-field="email">Cambiar</a></p>
+            <p>DNI: ${user.DNI || ''} <a class="change-link" data-field="dni">Cambiar</a></p>
+            <p>Fecha de Nacimiento: ${user.FechaNacimiento ? new Date(user.FechaNacimiento).toISOString().split('T')[0] : ''} <a class="change-link" data-field="fechaNacimiento">Cambiar</a></p>
+            <p>Dirección: ${user.direccion || ''} <a class="change-link" data-field="direccion">Cambiar</a></p>
+            <p>Departamento: ${user.departamento || ''} <a class="change-link" data-field="departamento">Cambiar</a></p>
+            <p>Provincia: ${user.provincia || ''} <a class="change-link" data-field="provincia">Cambiar</a></p>
+            <p>Distrito: ${user.distrito || ''} <a class="change-link" data-field="distrito">Cambiar</a></p>
+        `;
 
         // Manejar la apertura del formulario
         document.querySelectorAll('.change-link').forEach(link => {
@@ -43,6 +37,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const field = event.target.getAttribute('data-field');
                 formContainer.classList.remove('hidden');
                 modifyForm.reset();
+
+                // Prellenar el formulario con la información actual
+                const user = JSON.parse(localStorage.getItem('user'));
+                document.getElementById('nombre').value = user.Nombre || '';
+                document.getElementById('email').value = user.DireccionCorreo || '';
+                document.getElementById('dni').value = user.DNI || '';
+                document.getElementById('fechaNacimiento').value = user.FechaNacimiento ? new Date(user.FechaNacimiento).toISOString().split('T')[0] : '';
+                document.getElementById('direccion').value = user.direccion || '';
+                document.getElementById('departamento').value = user.departamento || '';
+                document.getElementById('provincia').value = user.provincia || '';
+                document.getElementById('distrito').value = user.distrito || '';
+
+                // Enfocar el campo específico
                 document.getElementById(field).focus();
             });
         });
@@ -54,11 +61,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             const formData = new FormData(modifyForm);
             const data = {
                 Nombre: formData.get('nombre') || '',
-                
                 DireccionCorreo: formData.get('email') || '',
                 DNI: formData.get('dni') || '',
                 FechaNacimiento: formData.get('fechaNacimiento') || '',
-                password: formData.get('password') || ''
+                password: formData.get('password') || '',
+                direccion: formData.get('direccion') || '',
+                departamento: formData.get('departamento') || '',
+                provincia: formData.get('provincia') || '',
+                distrito: formData.get('distrito') || ''
             };
 
             try {
@@ -74,6 +84,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (response.ok) {
                     alert('User updated successfully');
                     formContainer.classList.add('hidden');
+
+                    // Actualizar localStorage con los datos modificados
+                    const updatedUser = { ...JSON.parse(localStorage.getItem('user')), ...data };
+                    localStorage.setItem('user', JSON.stringify(updatedUser));
+
+                    // Refrescar la vista
+                    location.reload();
                 } else {
                     const errorData = await response.json();
                     alert(`Error: ${errorData.message}`);
