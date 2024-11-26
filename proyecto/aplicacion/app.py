@@ -158,8 +158,55 @@ def create_user():
         cursor.close()
         connection.close()
         
-        
-        
+
+
+# Para el inbox
+@app.route('/api/inbox', methods=['GET'])
+def get_inbox():
+    user_id = session.get('idinformacion_Persona')
+    if not user_id:
+        return jsonify({"message": "User not logged in"}), 401
+
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    cursor.execute('''
+        SELECT id_solicitud, solicitud_intercambio, estado_solicitud, fecha_solicitud
+        FROM inbox_Persona
+    ''', (user_id,))
+    rows = cursor.fetchall()
+    cursor.close()
+    connection.close()
+    return jsonify(rows), 200
+
+
+# Para detalles del inbox
+
+@app.route('/api/inbox/<int:request_id>', methods=['GET'])
+def get_request_details(request_id):
+    user_id = session.get('idinformacion_Persona')
+    if not user_id:
+        return jsonify({"message": "User not logged in"}), 401
+
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    cursor.execute('''
+        SELECT id_solicitud, solicitud_intercambio, estado_solicitud, fecha_solicitud
+        FROM inbox_Persona
+        WHERE id_solicitud = %s AND informacion_Persona_idinformacion_Persona = %s
+    ''', (request_id, user_id))
+    request = cursor.fetchone()
+    cursor.close()
+    connection.close()
+
+    if request:
+        return jsonify(request), 200
+    else:
+        return jsonify({"message": "Request not found"}), 404
+
+
+
+
+
         
 #Agregar objetos
 @app.route('/addObject', methods=['POST'])
