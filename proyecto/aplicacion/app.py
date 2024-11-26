@@ -141,7 +141,7 @@ def create_user():
                 "user_id": user_id,  # Usar el id de MySQL
                 "dni": DNI,
                 "correo": DireccionCorreo,
-                "name": Nombre,
+                "name": Nombre
             })
 
         connection.commit()
@@ -182,7 +182,7 @@ def add_object():
     cursor = connection.cursor()
 
     try:
-        # Insertar en la tabla objeto
+        # Insertar  un objeto en la tabla objeto
         cursor.execute('''
             INSERT INTO objeto (Nombre, Descripcion, URL_Imagen, URL_Video, informacion_Persona_idinformacion_Persona, categoria) 
             VALUES (%s, %s, %s, %s, %s, %s)
@@ -191,11 +191,44 @@ def add_object():
         # Obtener el id del objeto recién insertado
         idobjeto = cursor.lastrowid
         
-        # Insertar en la tabla reseñas_objetos
+        # 2. Inserta en Neo4j el objeto de la persona
+        query = '''
+        MERGE (p:PERSONA { id: $user_id})
+        MERGE (o:OBJETO { name: $name,id: $id,descripcion: $descripcion, url_imagen: $url_imagen, url_video: $url_video, categoria: $categoria})
+        MERGE (p)-[:TIENE]->(o)
+        RETURN p, o
+        '''
+        neo4j_conn.execute_query(query, {
+            "user_id": informacion_Persona_idinformacion_Persona,
+            "name": Nombre,
+            "id": idobjeto,
+            "descripcion": Descripcion,
+            "url_imagen": URL_Imagen,
+            "url_video": URL_Video,
+            "categoria": categoria
+            
+            
+        })
+            
+      
+        # Insertar una reseña la tabla reseñas_objetos
         cursor.execute('''
             INSERT INTO reseñas_objetos (objeto_idobjeto, estado_estético, estado_funcional, estado_garantia) 
             VALUES (%s, %s, %s, %s)
         ''', (idobjeto, estado_estetico, estado_funcional, estado_garantia))
+        
+        query = '''
+        MATCH (o:OBJETO { id: $id})
+        MERGE (r:RESEÑA {estado_estetico: $estado_estetico, estado_funcional: $estado_funcional, estado_garantia: $estado_garantia})
+        MERGE (o)-[:TIENE_RESEÑA]->(r)
+        '''
+        neo4j_conn.execute_query(query, {
+            "id": idobjeto,
+            "estado_estetico": estado_estetico,
+            "estado_funcional": estado_funcional,
+            "estado_garantia": estado_garantia
+        })
+        
         
         connection.commit()
     except mysql.connector.Error as err:
@@ -483,7 +516,7 @@ def get_banco_objetos():
         return jsonify({"message": "User not logged in"}), 401
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
-    cursor.execute('SELECT Nombre, Descripcion FROM objeto o JOIN banco b ON o.idobjeto=b.objeto_idobjeto')
+    cursor.execute('SELECT Nombre,idobjeto, Descripcion FROM objeto o JOIN banco b ON o.idobjeto=b.objeto_idobjeto WHERE fecha_de_salida IS NULL')
     rows = cursor.fetchall()
 
     cursor.execute('SELECT has_ticket FROM informacion_Persona WHERE DireccionCorreo = %s', (email,))
@@ -513,6 +546,84 @@ def get_objeto():
     cursor.close()
     connection.close()
     return jsonify({'objetos': rows}), 200
+
+@app.route('/objetoPorId/<int:id>', methods=['GET'])
+def get_objetoPorId(id):
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    cursor.execute('''
+        SELECT o.Nombre, o.Descripcion, o.URL_Imagen, o.categoria, r.estado_estético, r.estado_funcional, r.estado_garantia 
+        FROM objeto o 
+        JOIN reseñas_objetos r ON r.objeto_idobjeto = o.idobjeto 
+        WHERE o.idobjeto = %s
+    ''', (id,))
+    row = cursor.fetchone()
+    cursor.close()
+    connection.close()
+    if row:
+        return jsonify({'objeto': row}), 200
+    else:
+        return jsonify({"message": "Object not found"}), 404
+
+@app.route('/bancoRetiro', methods=['POST'])
+def banco_retiro():
+    informacion_Persona_idinformacion_Persona = session.get('idinformacion_Persona')
+    if not informacion_Persona_idinformacion_Persona:
+        return jsonify({"message": "User not logged in"}), 401
+    
+    data = request.get_json()
+    objeto_idobjeto = data.get('objeto_idobjeto')
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    try:
+        # Seleccionar el idticket
+        cursor.execute('''
+            SELECT idticket 
+            FROM ticket t 
+            JOIN detalles_ticket dt ON t.idticket = dt.ticket_idticket 
+            WHERE informacion_persona_idinformacion_Persona = %s 
+            AND redimiendo_ticket IS NULL 
+            LIMIT 1
+        ''', (informacion_Persona_idinformacion_Persona,))
+        
+        ticket = cursor.fetchone()
+        
+        if not ticket:
+            return jsonify({"message": "No available ticket found"}), 404
+        
+        idticket = ticket['idticket']
+        
+        # Actualizar redimiendo_ticket en la tabla detalles_ticket
+        cursor.execute('''
+            UPDATE detalles_ticket
+            SET redimiendo_ticket = CURRENT_TIMESTAMP
+            WHERE ticket_idticket = %s
+        ''', (idticket,))
+
+        cursor.execute('''
+            UPDATE banco
+            SET fecha_de_salida = CURRENT_TIMESTAMP, llevado_por = %s
+            WHERE objeto_idobjeto = %s
+        ''', (informacion_Persona_idinformacion_Persona, objeto_idobjeto))
+
+        # Actualizar has_ticket
+        cursor.execute('''
+            UPDATE informacion_Persona
+            SET has_ticket = has_ticket - 1
+            WHERE idinformacion_Persona = %s
+        ''', (informacion_Persona_idinformacion_Persona,))
+        
+        connection.commit()
+    except mysql.connector.Error as err:
+        connection.rollback()
+        return jsonify({"message": f"Error: {err}"}), 500
+    finally:
+        cursor.close()
+        connection.close()
+
+    return jsonify({"message": "Ticket retrieved and updated successfully", "idticket": idticket}), 200
+    
 
 
 
