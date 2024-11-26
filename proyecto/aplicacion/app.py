@@ -5,6 +5,8 @@ import uuid
 from neo4j import GraphDatabase
 import os
 
+
+
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
 app.secret_key = 'e7ef771e4cf86b5663e2e973510f3cb63c769f2b3e7fe429'
@@ -160,29 +162,42 @@ def create_user():
         
 
 
-# Para el inbox
 @app.route('/api/inbox', methods=['GET'])
 def get_inbox():
-    # Obtener el ID del usuario desde la sesión
+    user_id = session.get('idinformacion_Persona')
+    if not user_id:
+        return jsonify({"message": "User not logged in"}), 401  # Validar si el usuario no está logueado
+
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    cursor.execute('''
+        SELECT id_solicitud, solicitud_intercambio, estado_solicitud, fecha_solicitud
+        FROM inbox_Persona
+    ''', (user_id,))
+    rows = cursor.fetchall()
+    cursor.close()
+    connection.close()
+    return jsonify(rows), 200
+
+
+# Para detalles del inbox
+
+@app.route('/api/inbox/<int:request_id>', methods=['GET'])
+def get_request_details(request_id):
     user_id = session.get('idinformacion_Persona')
     if not user_id:
         return jsonify({"message": "User not logged in"}), 401
 
-    try:
-        # Conexión a la base de datos
-        connection = get_db_connection()
-        cursor = connection.cursor(dictionary=True)
-
-        # Consulta para obtener las solicitudes específicas del usuario
-        cursor.execute('''
-            SELECT id_solicitud, solicitud_intercambio, estado_solicitud, fecha_solicitud
-            FROM inbox_Persona
-            WHERE informacion_Persona_idinformacion_Persona = %s
-        ''', (user_id,))
-        rows = cursor.fetchall()
-
-        cursor.close()
-        connection.close()
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    cursor.execute('''
+        SELECT id_solicitud, solicitud_intercambio, estado_solicitud, fecha_solicitud
+        FROM inbox_Persona
+        WHERE id_solicitud = %s AND informacion_Persona_idinformacion_Persona = %s
+    ''', (request_id, user_id))
+    request = cursor.fetchone()
+    cursor.close()
+    connection.close()
 
         # Retorna las solicitudes como JSON
         return jsonify(rows), 200

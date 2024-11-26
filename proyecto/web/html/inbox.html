@@ -68,5 +68,38 @@
     </table>
 
     <script src="inbox.js"></script>
+    <script>
+        // Realizamos la solicitud GET a la API para obtener los datos
+        fetch('http://127.0.0.1:5000/api/inbox', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+        })
+        .then(response => response.json())
+        .then(data => {
+            const tableBody = document.getElementById('inbox-table-body');
+            if (data.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="4">No hay solicitudes en tu bandeja de entrada.</td></tr>';
+            } else {
+                data.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${item.id_solicitud}</td>
+                        <td>${item.solicitud_intercambio}</td>
+                        <td>${item.estado_solicitud}</td>
+                        <td>${item.fecha_solicitud}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching data:', error);
+            document.getElementById('inbox-table-body').innerHTML = '<tr><td colspan="4">Error al cargar los datos.</td></tr>';
+        });
+    </script>
+
 </body>
 </html>
