@@ -37,9 +37,9 @@ class Neo4jConnection:
 
 # Configuración de la conexión a Neo4j
 neo4j_conn = Neo4jConnection(
-    uri=os.getenv("NEO4J_URI", "bolt://44.200.231.186:7687"),
+    uri=os.getenv("NEO4J_URI", "bolt://3.93.149.233:7687"),
     user=os.getenv("NEO4J_USER", "neo4j"),
-    password=os.getenv("NEO4J_PASSWORD", "sentries-scab-rowboats")
+    password=os.getenv("NEO4J_PASSWORD", "rushes-skills-subsystems")
 )
 # ======================================================================================================================
 # Inicio de sesión
