@@ -5,6 +5,8 @@ import uuid
 from neo4j import GraphDatabase
 import os
 
+
+
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
 app.secret_key = 'e7ef771e4cf86b5663e2e973510f3cb63c769f2b3e7fe429'
@@ -160,23 +162,31 @@ def create_user():
         
 
 
-# Para el inbox
 @app.route('/api/inbox', methods=['GET'])
 def get_inbox():
-    user_id = session.get('idinformacion_Persona')
+    user_id = session.get('idinformacion_Persona')  # ID del usuario almacenado en la sesión
     if not user_id:
-        return jsonify({"message": "User not logged in"}), 401
+        return jsonify({"message": "User not logged in"}), 401  # Validar si el usuario no está logueado
 
-    connection = get_db_connection()
-    cursor = connection.cursor(dictionary=True)
-    cursor.execute('''
-        SELECT id_solicitud, solicitud_intercambio, estado_solicitud, fecha_solicitud
-        FROM inbox_Persona
-    ''', (user_id,))
-    rows = cursor.fetchall()
-    cursor.close()
-    connection.close()
-    return jsonify(rows), 200
+    try:
+        connection = get_db_connection()  # Conexión a la base de datos
+        cursor = connection.cursor(dictionary=True)
+
+        # Consulta SQL para filtrar solicitudes del usuario actual
+        cursor.execute('''
+            SELECT id_solicitud, solicitud_intercambio, estado_solicitud, fecha_solicitud
+            FROM inbox_Persona
+            WHERE informacion_Persona_idinformacion_Persona = %s
+        ''', (user_id,))  # Usar el ID del usuario como filtro
+
+        rows = cursor.fetchall()  # Obtener los registros
+        cursor.close()
+        connection.close()
+
+        return jsonify(rows), 200  # Retornar datos en JSON
+    except Exception as e:
+        print(f"Error en la consulta del inbox: {e}")
+        return jsonify({"message": "Error interno del servidor"}), 500
 
 
 # Para detalles del inbox
