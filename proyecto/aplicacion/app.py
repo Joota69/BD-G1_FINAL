@@ -351,6 +351,22 @@ def add_objectbank():
             INSERT INTO banco (dejado_por, objeto_idobjeto) 
             VALUES (%s, %s)
         ''', (informacion_Persona_idinformacion_Persona, idobjeto))
+        banco_id_banca = cursor.lastrowid
+        #crear ticket 
+        #generar 20 caracteres entre numeros y letras aleatorios en una variables
+
+        numero_de_ticket= str(uuid.uuid4())
+        
+        cursor.execute('''
+            INSERT INTO ticket (banco_id_banca, informacion_Persona_idinformacion_Persona,numero_de_ticket) 
+            VALUES (%s, %s, %s)
+        ''', (banco_id_banca, informacion_Persona_idinformacion_Persona,numero_de_ticket))
+        tickeid = cursor.lastrowid
+       # insertar en detalles_ticket
+        cursor.execute('''
+            INSERT INTO detalles_ticket (ticket_idticket) 
+            VALUES (%s)
+        ''', (tickeid,)) 
 
         connection.commit()
     except mysql.connector.Error as err:
