@@ -113,24 +113,43 @@ def create_user():
                 INSERT INTO direccion_Persona (informacion_Persona_idinformacion_Persona, direccion, departamento, provincia, distrito)
                 VALUES (%s, %s, %s, %s, %s)
             ''', (user_id, Direccion, Departamento, Provincia, Distrito))
+            
+            # 2. Inserta en Neo4j DOMICILIO DE LA PERSONA REGISTRADA
+            query = '''
+            MERGE (p:PERSONA { id: $user_id, dni: $dni, correo: $correo, name: $name})
+            MERGE (d:DIRECCION { direccion: $direccion, departamento: $departamento, provincia: $provincia, distrito: $distrito})
+            MERGE (p)-[:VIVE_EN]->(d)
+            RETURN p, d
+            '''
+            neo4j_conn.execute_query(query, {
+                "user_id": user_id,  # Usar el id de MySQL
+                "dni": DNI,
+                "correo": DireccionCorreo,
+                "name": Nombre,
+                "direccion": Direccion,
+                "departamento": Departamento,
+                "provincia": Provincia,
+                "distrito": Distrito
+            })
+        else:
+            # En caso de no tener dirección (Poco probable), pero en caso pueda ocurrir.
+            query = '''
+            MERGE (p:PERSONA { id: $user_id, dni: $dni, correo: $correo, name: $name})
+            RETURN p
+            '''
+            neo4j_conn.execute_query(query, {
+                "user_id": user_id,  # Usar el id de MySQL
+                "dni": DNI,
+                "correo": DireccionCorreo,
+                "name": Nombre,
+            })
 
         connection.commit()
-        
-        # 2. Inserta en Neo4j
-        query = '''
-        CREATE (p:PERSONA { dni: $dni, correo: $correo, name: $name})
-        RETURN p
-        '''
-        neo4j_conn.execute_query(query, {
-            "dni": DNI,
-            "correo": DireccionCorreo,
-            "name": Nombre,
-        })
-
+    
         return jsonify({"message": "User created successfully"}), 201
 
     except Exception as e:
-        print(f"Error al crear usuario: {e}")  # Añade esta línea
+        print(f"Error al crear usuario: {e}")  # Depuración
         return jsonify({"message": f"Error creating user: {str(e)}"}), 500
 
     
@@ -138,6 +157,131 @@ def create_user():
     finally:
         cursor.close()
         connection.close()
+        
+        
+        
+        
+#Agregar objetos
+@app.route('/addObject', methods=['POST'])
+def add_object():
+    informacion_Persona_idinformacion_Persona = session.get('idinformacion_Persona')
+    if not informacion_Persona_idinformacion_Persona:
+        return jsonify({"message": "User not logged in"}), 401
+
+    data = request.get_json()
+    Nombre = data.get('Nombre')
+    Descripcion = data.get('Descripcion')
+    URL_Imagen = data.get('URL_Imagen')
+    URL_Video = data.get('URL_Video')
+    categoria = data.get('categoria')
+    estado_estetico = data.get('estado_estetico')
+    estado_funcional = data.get('estado_funcional')
+    estado_garantia = data.get('estado_garantia')
+
+    connection = get_db_connection()
+    cursor = connection.cursor()
+
+    try:
+        # Insertar en la tabla objeto
+        cursor.execute('''
+            INSERT INTO objeto (Nombre, Descripcion, URL_Imagen, URL_Video, informacion_Persona_idinformacion_Persona, categoria) 
+            VALUES (%s, %s, %s, %s, %s, %s)
+        ''', (Nombre, Descripcion, URL_Imagen, URL_Video, informacion_Persona_idinformacion_Persona, categoria))
+        
+        # Obtener el id del objeto recién insertado
+        idobjeto = cursor.lastrowid
+        
+        # Insertar en la tabla reseñas_objetos
+        cursor.execute('''
+            INSERT INTO reseñas_objetos (objeto_idobjeto, estado_estético, estado_funcional, estado_garantia) 
+            VALUES (%s, %s, %s, %s)
+        ''', (idobjeto, estado_estetico, estado_funcional, estado_garantia))
+        
+        connection.commit()
+    except mysql.connector.Error as err:
+        connection.rollback()
+        return jsonify({"message": f"Error: {err}"}), 500
+    finally:
+        cursor.close()
+        connection.close()
+
+    return jsonify({"message": "Object and review added successfully"}), 201
+
+#Agregar objetos al banco
+#Agregar objetos al banco
+@app.route('/addObjectbank', methods=['POST'])
+def add_objectbank():
+    informacion_Persona_idinformacion_Persona = session.get('idinformacion_Persona')
+    if not informacion_Persona_idinformacion_Persona:
+        return jsonify({"message": "User not logged in"}), 401
+
+    data = request.get_json()
+    Nombre = data.get('Nombre')
+    Descripcion = data.get('Descripcion')
+    URL_Imagen = data.get('URL_Imagen')
+    URL_Video = data.get('URL_Video')
+    categoria = data.get('categoria')
+    estado_estetico = data.get('estado_estetico')
+    estado_funcional = data.get('estado_funcional')
+    estado_garantia = data.get('estado_garantia')
+
+    connection = get_db_connection()
+    cursor = connection.cursor()
+
+    try:
+        # Insertar en la tabla objeto
+        cursor.execute('''
+            INSERT INTO objeto (Nombre, Descripcion, URL_Imagen, URL_Video, informacion_Persona_idinformacion_Persona, categoria) 
+            VALUES (%s, %s, %s, %s, %s, %s)
+        ''', (Nombre, Descripcion, URL_Imagen, URL_Video, informacion_Persona_idinformacion_Persona, categoria))
+        
+        # Obtener el id del objeto recién insertado
+        idobjeto = cursor.lastrowid
+        
+        # Insertar en la tabla reseñas_objetos
+        cursor.execute('''
+            INSERT INTO reseñas_objetos (objeto_idobjeto, estado_estético, estado_funcional, estado_garantia) 
+            VALUES (%s, %s, %s, %s)
+        ''', (idobjeto, estado_estetico, estado_funcional, estado_garantia))
+        
+        # Modificar has_ticket
+        cursor.execute('''
+            UPDATE informacion_Persona 
+            SET has_ticket = has_ticket + 1 
+            WHERE idinformacion_Persona = %s
+        ''', (informacion_Persona_idinformacion_Persona,))
+        
+        # Insertar en la tabla banco
+        cursor.execute('''
+            INSERT INTO banco (dejado_por, objeto_idobjeto) 
+            VALUES (%s, %s)
+        ''', (informacion_Persona_idinformacion_Persona, idobjeto))
+        banco_id_banca = cursor.lastrowid
+        #crear ticket 
+        #generar 20 caracteres entre numeros y letras aleatorios en una variables
+
+        numero_de_ticket= str(uuid.uuid4())
+        
+        cursor.execute('''
+            INSERT INTO ticket (banco_id_banca, informacion_Persona_idinformacion_Persona,numero_de_ticket) 
+            VALUES (%s, %s, %s)
+        ''', (banco_id_banca, informacion_Persona_idinformacion_Persona,numero_de_ticket))
+        tickeid = cursor.lastrowid
+       # insertar en detalles_ticket
+        cursor.execute('''
+            INSERT INTO detalles_ticket (ticket_idticket) 
+            VALUES (%s)
+        ''', (tickeid,)) 
+
+        connection.commit()
+    except mysql.connector.Error as err:
+        connection.rollback()
+        return jsonify({"message": f"Error: {err}"}), 500
+    finally:
+        cursor.close()
+        connection.close()
+
+    return jsonify({"message": "Object and review added successfully"}), 201
 
 # Obtener objetos
 @app.route('/get_objects', methods=['GET'])
@@ -324,127 +468,7 @@ def get_objeto():
     return jsonify({'objetos': rows}), 200
 
 
-#Agregar objetos
-@app.route('/addObject', methods=['POST'])
-def add_object():
-    informacion_Persona_idinformacion_Persona = session.get('idinformacion_Persona')
-    if not informacion_Persona_idinformacion_Persona:
-        return jsonify({"message": "User not logged in"}), 401
 
-    data = request.get_json()
-    Nombre = data.get('Nombre')
-    Descripcion = data.get('Descripcion')
-    URL_Imagen = data.get('URL_Imagen')
-    URL_Video = data.get('URL_Video')
-    categoria = data.get('categoria')
-    estado_estetico = data.get('estado_estetico')
-    estado_funcional = data.get('estado_funcional')
-    estado_garantia = data.get('estado_garantia')
-
-    connection = get_db_connection()
-    cursor = connection.cursor()
-
-    try:
-        # Insertar en la tabla objeto
-        cursor.execute('''
-            INSERT INTO objeto (Nombre, Descripcion, URL_Imagen, URL_Video, informacion_Persona_idinformacion_Persona, categoria) 
-            VALUES (%s, %s, %s, %s, %s, %s)
-        ''', (Nombre, Descripcion, URL_Imagen, URL_Video, informacion_Persona_idinformacion_Persona, categoria))
-        
-        # Obtener el id del objeto recién insertado
-        idobjeto = cursor.lastrowid
-        
-        # Insertar en la tabla reseñas_objetos
-        cursor.execute('''
-            INSERT INTO reseñas_objetos (objeto_idobjeto, estado_estético, estado_funcional, estado_garantia) 
-            VALUES (%s, %s, %s, %s)
-        ''', (idobjeto, estado_estetico, estado_funcional, estado_garantia))
-        
-        connection.commit()
-    except mysql.connector.Error as err:
-        connection.rollback()
-        return jsonify({"message": f"Error: {err}"}), 500
-    finally:
-        cursor.close()
-        connection.close()
-
-    return jsonify({"message": "Object and review added successfully"}), 201
-
-#Agregar objetos al banco
-#Agregar objetos al banco
-@app.route('/addObjectbank', methods=['POST'])
-def add_objectbank():
-    informacion_Persona_idinformacion_Persona = session.get('idinformacion_Persona')
-    if not informacion_Persona_idinformacion_Persona:
-        return jsonify({"message": "User not logged in"}), 401
-
-    data = request.get_json()
-    Nombre = data.get('Nombre')
-    Descripcion = data.get('Descripcion')
-    URL_Imagen = data.get('URL_Imagen')
-    URL_Video = data.get('URL_Video')
-    categoria = data.get('categoria')
-    estado_estetico = data.get('estado_estetico')
-    estado_funcional = data.get('estado_funcional')
-    estado_garantia = data.get('estado_garantia')
-
-    connection = get_db_connection()
-    cursor = connection.cursor()
-
-    try:
-        # Insertar en la tabla objeto
-        cursor.execute('''
-            INSERT INTO objeto (Nombre, Descripcion, URL_Imagen, URL_Video, informacion_Persona_idinformacion_Persona, categoria) 
-            VALUES (%s, %s, %s, %s, %s, %s)
-        ''', (Nombre, Descripcion, URL_Imagen, URL_Video, informacion_Persona_idinformacion_Persona, categoria))
-        
-        # Obtener el id del objeto recién insertado
-        idobjeto = cursor.lastrowid
-        
-        # Insertar en la tabla reseñas_objetos
-        cursor.execute('''
-            INSERT INTO reseñas_objetos (objeto_idobjeto, estado_estético, estado_funcional, estado_garantia) 
-            VALUES (%s, %s, %s, %s)
-        ''', (idobjeto, estado_estetico, estado_funcional, estado_garantia))
-        
-        # Modificar has_ticket
-        cursor.execute('''
-            UPDATE informacion_Persona 
-            SET has_ticket = has_ticket + 1 
-            WHERE idinformacion_Persona = %s
-        ''', (informacion_Persona_idinformacion_Persona,))
-        
-        # Insertar en la tabla banco
-        cursor.execute('''
-            INSERT INTO banco (dejado_por, objeto_idobjeto) 
-            VALUES (%s, %s)
-        ''', (informacion_Persona_idinformacion_Persona, idobjeto))
-        banco_id_banca = cursor.lastrowid
-        #crear ticket 
-        #generar 20 caracteres entre numeros y letras aleatorios en una variables
-
-        numero_de_ticket= str(uuid.uuid4())
-        
-        cursor.execute('''
-            INSERT INTO ticket (banco_id_banca, informacion_Persona_idinformacion_Persona,numero_de_ticket) 
-            VALUES (%s, %s, %s)
-        ''', (banco_id_banca, informacion_Persona_idinformacion_Persona,numero_de_ticket))
-        tickeid = cursor.lastrowid
-       # insertar en detalles_ticket
-        cursor.execute('''
-            INSERT INTO detalles_ticket (ticket_idticket) 
-            VALUES (%s)
-        ''', (tickeid,)) 
-
-        connection.commit()
-    except mysql.connector.Error as err:
-        connection.rollback()
-        return jsonify({"message": f"Error: {err}"}), 500
-    finally:
-        cursor.close()
-        connection.close()
-
-    return jsonify({"message": "Object and review added successfully"}), 201
 
 if __name__ == '__main__':
     app.run(debug=True)
