@@ -436,7 +436,7 @@ def get_banco_objetos():
         return jsonify({"message": "User not logged in"}), 401
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
-    cursor.execute('SELECT Nombre, Descripcion FROM objeto o JOIN banco b ON o.idobjeto=b.objeto_idobjeto')
+    cursor.execute('SELECT Nombre, Descripcion FROM objeto o JOIN banco b ON o.idobjeto=b.objeto_idobjeto WHERE fecha_de_salida IS NULL')
     rows = cursor.fetchall()
 
     cursor.execute('SELECT has_ticket FROM informacion_Persona WHERE DireccionCorreo = %s', (email,))
@@ -466,6 +466,76 @@ def get_objeto():
     cursor.close()
     connection.close()
     return jsonify({'objetos': rows}), 200
+
+@app.route('/objetoPorId', methods=['GET'])
+def get_objetoPorId():
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    cursor.execute('SELECT * FROM objeto')
+    rows = cursor.fetchall()
+    cursor.close()
+    connection.close()
+    return jsonify({'objetos': rows}), 200
+
+@app.route('/bancoRetiro', methods=['POST'])
+def banco_retiro():
+    informacion_Persona_idinformacion_Persona = session.get('idinformacion_Persona')
+    if not informacion_Persona_idinformacion_Persona:
+        return jsonify({"message": "User not logged in"}), 401
+    
+    data = request.get_json()
+    objeto_idobjeto = data.get('objeto_idobjeto')
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    try:
+        # Seleccionar el idticket
+        cursor.execute('''
+            SELECT idticket 
+            FROM ticket t 
+            JOIN detalles_ticket dt ON t.idticket = dt.ticket_idticket 
+            WHERE informacion_persona_idinformacion_Persona = %s 
+            AND redimiendo_ticket IS NULL 
+            LIMIT 1
+        ''', (informacion_Persona_idinformacion_Persona,))
+        
+        ticket = cursor.fetchone()
+        
+        if not ticket:
+            return jsonify({"message": "No available ticket found"}), 404
+        
+        idticket = ticket['idticket']
+        
+        # Actualizar redimiendo_ticket en la tabla detalles_ticket
+        cursor.execute('''
+            UPDATE detalles_ticket
+            SET redimiendo_ticket = CURRENT_TIMESTAMP
+            WHERE ticket_idticket = %s
+        ''', (idticket,))
+
+        cursor.execute('''
+            UPDATE banco
+            SET fecha_de_salida = CURRENT_TIMESTAMP, llevado_por = %s
+            WHERE objeto_idobjeto = %s
+        ''', (informacion_Persona_idinformacion_Persona, objeto_idobjeto))
+
+        # Actualizar has_ticket
+        cursor.execute('''
+            UPDATE informacion_Persona
+            SET has_ticket = has_ticket - 1
+            WHERE idinformacion_Persona = %s
+        ''', (informacion_Persona_idinformacion_Persona,))
+        
+        connection.commit()
+    except mysql.connector.Error as err:
+        connection.rollback()
+        return jsonify({"message": f"Error: {err}"}), 500
+    finally:
+        cursor.close()
+        connection.close()
+
+    return jsonify({"message": "Ticket retrieved and updated successfully", "idticket": idticket}), 200
+    
 
 
 
