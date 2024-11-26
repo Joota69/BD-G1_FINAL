@@ -469,7 +469,7 @@ def get_banco_objetos():
         return jsonify({"message": "User not logged in"}), 401
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
-    cursor.execute('SELECT Nombre, Descripcion FROM objeto o JOIN banco b ON o.idobjeto=b.objeto_idobjeto WHERE fecha_de_salida IS NULL')
+    cursor.execute('SELECT Nombre,idobjeto, Descripcion FROM objeto o JOIN banco b ON o.idobjeto=b.objeto_idobjeto WHERE fecha_de_salida IS NULL')
     rows = cursor.fetchall()
 
     cursor.execute('SELECT has_ticket FROM informacion_Persona WHERE DireccionCorreo = %s', (email,))
@@ -500,15 +500,23 @@ def get_objeto():
     connection.close()
     return jsonify({'objetos': rows}), 200
 
-@app.route('/objetoPorId', methods=['GET'])
-def get_objetoPorId():
+@app.route('/objetoPorId/<int:id>', methods=['GET'])
+def get_objetoPorId(id):
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
-    cursor.execute('SELECT * FROM objeto')
-    rows = cursor.fetchall()
+    cursor.execute('''
+        SELECT o.Nombre, o.Descripcion, o.URL_Imagen, o.categoria, r.estado_estético, r.estado_funcional, r.estado_garantia 
+        FROM objeto o 
+        JOIN reseñas_objetos r ON r.objeto_idobjeto = o.idobjeto 
+        WHERE o.idobjeto = %s
+    ''', (id,))
+    row = cursor.fetchone()
     cursor.close()
     connection.close()
-    return jsonify({'objetos': rows}), 200
+    if row:
+        return jsonify({'objeto': row}), 200
+    else:
+        return jsonify({"message": "Object not found"}), 404
 
 @app.route('/bancoRetiro', methods=['POST'])
 def banco_retiro():
