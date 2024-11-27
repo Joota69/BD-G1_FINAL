@@ -6,12 +6,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const provincias = {
         Lima: ['Lima', 'Huarochirí', 'Cañete'],
         Callao: ['Callao'],
-        Arequipa: ['Arequipa', 'Camaná', 'Islay']
+        Arequipa: ['Arequipa', 'Camaná', 'Islay'],
+        Cusco: ['Cusco', 'La Convención', 'Urubamba'],
+        'La Libertad': ['Trujillo', 'Pacasmayo', 'Chepén']
     };
 
     const distritos = {
         Lima: {
-            Lima: ['Miraflores', 'San Isidro', 'Barranco'],
+            Lima: ['Miraflores', 'San Isidro', 'Barranco','San Martin de Porres','Pueblo libre','La victoria','La Molina','San Borja','San Miguel','San Juan de Lurigancho','Independencia','Carabayllo','Comas'],
             Huarochirí: ['Chaclacayo', 'Chosica'],
             Cañete: ['Asia', 'San Vicente']
         },
@@ -22,6 +24,16 @@ document.addEventListener('DOMContentLoaded', () => {
             Arequipa: ['Yanahuara', 'Cayma'],
             Camaná: ['Camaná', 'Quilca'],
             Islay: ['Mollendo', 'Mejía']
+        },
+        Cusco: {
+            Cusco: ['San Blas', 'Wanchaq'],
+            'La Convención': ['Quillabamba', 'Santa Ana'],
+            Urubamba: ['Ollantaytambo', 'Machu Picchu']
+        },
+        'La Libertad': {
+            Trujillo: ['El Porvenir', 'Florencia de Mora'],
+            Pacasmayo: ['San Pedro', 'Guadalupe'],
+            Chepén: ['Chepén', 'Pacanga']
         }
     };
 
