@@ -83,6 +83,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const data = await response.json();
         const products = data['objects'];
         const userInfo = data['info'];
+        const userInfo2 = data['destino'];
+        
 
         // Mostrar el mensaje de bienvenida y la pregunta
         if (userInfo && userInfo.length > 0) {
@@ -110,7 +112,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 // Añadir evento para abrir el pop-up cuando se hace clic en la card
                 card.addEventListener('click', () => {
-                    openObjectPopup(product.Nombre, products);
+                    openObjectPopup(product.Nombre, userInfo2);
                 });
 
                 card.appendChild(img);

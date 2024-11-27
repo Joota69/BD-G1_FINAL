@@ -434,6 +434,16 @@ def get_objects():
     cursor.execute('SELECT o.idObjeto,o.Nombre, o.Descripcion, o.URL_Imagen FROM objeto o WHERE idObjeto NOT IN (SELECT b.objeto_idobjeto FROM banco b)')
     rows = cursor.fetchall()
 
+            # Obtener los objetos que el usuario ha agregado, excluyendo los objetos en el banco
+    cursor.execute('''
+        SELECT o.idObjeto, o.Nombre, o.Descripcion, o.URL_Imagen 
+        FROM objeto o
+        INNER JOIN informacion_Persona ip ON o.informacion_Persona_idinformacion_Persona = ip.idinformacion_Persona
+        WHERE ip.DireccionCorreo = %s
+        AND o.idObjeto NOT IN (SELECT b.objeto_idobjeto FROM banco b)
+    ''', (email,))
+    rows2 = cursor.fetchall()
+
     # Obtener información del usuario
     cursor.execute('SELECT Nombre, DNI, DireccionCorreo, has_ticket FROM informacion_Persona WHERE DireccionCorreo = %s', (email,))
     info = cursor.fetchall()
@@ -441,7 +451,7 @@ def get_objects():
     cursor.close()
     connection.close()
 
-    return jsonify({'objects': rows, 'info': info}), 200
+    return jsonify({'objects': rows,'destino': rows2, 'info': info}), 200
 
 #Obtener información de usuario
 @app.route('/userinfo', methods=['GET'])
