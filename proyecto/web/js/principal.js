@@ -204,7 +204,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 objectPopup.style.display = 'none';
             }
         });
-<<<<<<< HEAD
 
         // Enviar la solicitud de intercambio cuando se hace clic en el botón "Intercambiar"
         exchangeButton.addEventListener('click', async () => {
@@ -245,8 +244,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 alert('Hubo un problema al enviar la solicitud de intercambio.');
             }
         });
-=======
->>>>>>> f06bef610cda4a39240c20a33f5a2142ded919d0
     }
 
     // Función para mover el carrusel
