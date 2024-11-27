@@ -874,11 +874,52 @@ def update_inbox_status():
         connection = get_db_connection()
         cursor = connection.cursor()
 
+        # Actualizar el estado de la solicitud en inbox_Persona
         cursor.execute('''
             UPDATE inbox_Persona
             SET estado_solicitud = %s
             WHERE id_solicitud = %s
         ''', (nuevo_estado, id_solicitud))
+
+        # Si el nuevo estado es "Aceptada", insertar en la tabla Intercambio
+        if nuevo_estado.lower() == 'aceptada':
+            # Obtener los detalles de la solicitud para insertar en Intercambio
+            cursor.execute('''
+                SELECT objeto_pedido, objeto_ofrecido
+                FROM inbox_Persona
+                WHERE id_solicitud = %s
+            ''', (id_solicitud,))
+            solicitud = cursor.fetchone()
+
+            if solicitud:
+                objeto_pedido = solicitud[0]
+                objeto_ofrecido = solicitud[1]
+
+                # Obtener el propietario del objeto solicitado
+                cursor.execute('''
+                    SELECT informacion_Persona_idinformacion_Persona
+                    FROM objeto
+                    WHERE idobjeto = %s
+                ''', (objeto_pedido,))
+                propietario_solicitado = cursor.fetchone()
+
+                # Obtener el propietario del objeto ofrecido
+                cursor.execute('''
+                    SELECT informacion_Persona_idinformacion_Persona
+                    FROM objeto
+                    WHERE idobjeto = %s
+                ''', (objeto_ofrecido,))
+                propietario_ofrecido = cursor.fetchone()
+
+                if propietario_solicitado and propietario_ofrecido:
+                    persona_id_solicitado = propietario_solicitado[0]
+                    persona_id_ofrecido = propietario_ofrecido[0]
+
+                    # Insertar en la tabla Intercambio
+                    cursor.execute('''
+                        INSERT INTO Intercambio (objeto_idobjeto, objeto_idobjeto1, informacion_Persona_idinformacion_Persona, informacion_Persona_idinformacion_Persona1, Fecha)
+                        VALUES (%s, %s, %s, %s, NOW())
+                    ''', (objeto_pedido, objeto_ofrecido, persona_id_solicitado, persona_id_ofrecido))
 
         connection.commit()
         return jsonify({"message": "Estado actualizado correctamente"}), 200
