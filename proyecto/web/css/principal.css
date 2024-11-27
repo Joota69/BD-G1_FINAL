@@ -29,6 +29,8 @@ nav .products {
     margin: 0;
     font-size: 1.2em;
     font-weight: bold;
+    margin-left: 1px; /* Mueve hacia la izquierda al usar valores negativos */
+
 }
 
 nav a, nav button {
@@ -43,6 +45,11 @@ nav a, nav button {
     transition: background-color 0.3s;
     margin: 0 0.5em; /* Espaciado entre enlaces */
 }
+
+nav a {
+    margin-right: 15px; /* Agrega espacio entre los enlaces hacia la derecha */
+}
+
 
 nav a:hover, nav button:hover {
     background-color: #555;
