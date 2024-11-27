@@ -91,12 +91,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const card = document.createElement('div');
                 card.className = 'card';
 
+                const img = document.createElement('img');
+                img.src = product.URL_Imagen;
+                img.alt = product.Nombre;
+                img.className = 'card-img';
+
                 const name = document.createElement('h2');
                 name.textContent = product.Nombre;
 
                 const description = document.createElement('p');
                 description.textContent = product.Descripcion;
 
+                card.appendChild(img);
                 card.appendChild(name);
                 card.appendChild(description);
                 container.appendChild(card);

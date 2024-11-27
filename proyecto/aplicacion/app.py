@@ -360,7 +360,7 @@ def get_objects():
     cursor = connection.cursor(dictionary=True)
 
     # Obtener los objetos
-    cursor.execute('SELECT Nombre, Descripcion FROM objeto')
+    cursor.execute('SELECT Nombre, Descripcion,URL_Imagen FROM objeto')
     rows = cursor.fetchall()
 
     # Obtener información del usuario

@@ -1,94 +1,96 @@
 body {
     font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
+    background-color: #ffffff;
     margin: 0;
     padding: 0;
-    display: flex;
-    flex-direction: column; /* Cambia a diseño en columna */
-    min-height: 100vh; /* Asegura que la página ocupe al menos toda la altura de la ventana */
 }
-
 nav {
-    background-color: #333; /* Fondo oscuro */
+    background-color: #000000;
     color: white;
-    display: flex; /* Usa diseño flex */
-    flex-direction: row; /* Elementos en fila */
-    justify-content: space-between; /* Mueve los elementos a los extremos */
-    align-items: center; /* Alinea verticalmente */
-    width: 100%; /* Ocupa todo el ancho */
-    height: 60px; /* Ajusta altura */
-    padding: 0 1em; /* Espaciado horizontal */
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Sombra */
-    position: fixed; /* Fija la barra */
-    top: 0;
-    left: 0;
-    z-index: 1000; /* Encima de otros elementos */
+    padding: 1rem;
+    font-size: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
-
 nav .products {
-    margin: 0;
-    font-size: 1.2em;
+    font-size: 1.5rem;
     font-weight: bold;
-    margin-left: 1px; /* Mueve hacia la izquierda al usar valores negativos */
-
+    font-size: 30px;
 }
-
-nav a, nav button {
+nav .nav-right a {
     color: white;
+    margin-left: 1rem;
     text-decoration: none;
-    font-size: 1em;
-    padding: 0.5em 1em;
-    border-radius: 5px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    transition: background-color 0.3s;
-    margin: 0 0.5em; /* Espaciado entre enlaces */
 }
-
-nav a {
-    margin-right: 15px; /* Agrega espacio entre los enlaces hacia la derecha */
+nav .nav-right a.active {
+    font-weight: bold;
 }
-
-
-nav a:hover, nav button:hover {
-    background-color: #555;
-}
-
 main {
-    margin-top: 60px; /* Espacio superior para evitar superposición */
-    padding: 2em;
+    padding: 2rem;
 }
-
-
-
+#user-container {
+    background-color: white;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px;
+    background-color: #040404;
+    margin-bottom: 2rem;
+}
+.button-container {
+    text-align: right;
+    margin-bottom: 1rem;
+}
+.button-container button {
+    background-color: #FFFF00;
+    color: rgb(0, 0, 0);
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.button-container button:hover {
+    background-color: #000000;
+}
 .products-container {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1em;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
 }
-
 .card {
     background-color: white;
+    padding: 1rem;
     border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    padding: 1em;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid #000000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
-
-h2 {
-    color: #4CAF50;
+.card h2 {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
 }
-
+.card p {
+    margin: 0;
+}
+.card-img {
+    width: 100%;
+    height: auto;
+    max-height: 200px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
 footer {
-    background-color: #333;
-    color: white;
-    text-align: center; /* Centrar texto en el footer */
-    padding: 10px 0;
-    position: relative; /* Posición relativa para mantenerlo en el flujo normal */
-    width: 100%; /* Ocupa todo el ancho de la ventana */
-    margin-top: auto; /* Empuja el footer hacia el final del contenedor */
+    background-color: #FFFF00;
+    color: rgb(0, 0, 0);
+    text-align: center;
+    padding: 0.2rem;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
 }
-
 .modal {
     display: none;
     position: fixed;
@@ -98,81 +100,67 @@ footer {
     width: 100%;
     height: 100%;
     overflow: auto;
-    background-color: rgba(0, 0, 0, 0.4);
+    background-color: rgb(0,0,0);
+    background-color: rgba(0,0,0,0.4);
+    padding-top: 60px;
 }
-
 .modal-content {
-    background-color: white;
-    margin: 15% auto;
+    background-color: #fefefe;
+    margin: 5% auto;
     padding: 20px;
     border: 1px solid #888;
     width: 80%;
     max-width: 500px;
     border-radius: 8px;
 }
-
 .close {
     color: #aaa;
     float: right;
     font-size: 28px;
     font-weight: bold;
 }
-
 .close:hover,
 .close:focus {
     color: black;
     text-decoration: none;
     cursor: pointer;
 }
-
+.form-container label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+}
 .form-container input {
     width: 100%;
-    padding: 0.5em;
-    margin: 0.5em 0;
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
 }
-
 .form-container button {
-    padding: 0.5em 1em;
-    background-color: #4CAF50;
+    background-color: #007bff;
     color: white;
+    padding: 0.5rem 1rem;
     border: none;
     border-radius: 4px;
     cursor: pointer;
 }
-
-.button-container {
-    display: flex;
-    justify-content: flex-end; /* Alinea los elementos a la derecha */
-    margin: 1em 0; /* Espaciado superior e inferior */
+.form-container button:hover {
+    background-color: #0056b3;
 }
-
-#add-object-button {
-    padding: 0.5em 1em;
-    font-size: 1em;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s;
+.welcome-message {
+    color: #000000;
+    font-family: 'Georgia', serif;
+    font-size: 2rem;
+    margin-bottom: 1rem;
+   
+    
 }
+.exchange-question {
+    color: #000000;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    background-color: #FFFF00;
 
-#add-object-button:hover {
-    background-color: #45a049;
-}
-
-#welcome-message {
-    font-size: 1.5em;
-    font-weight: bold;
-    margin-bottom: 0.5em;
-    text-align: right;
-    margin-right: 1em;
-}
-
-#exchange-question {
-    font-size: 1.2em;
-    margin-bottom: 1em;
-    color: #555;
-    text-align: right;
-    margin-right: 1em;
 }
