@@ -849,7 +849,7 @@ def send_exchange_request():
         cursor.execute('''
             INSERT INTO inbox_Persona (informacion_Persona_idinformacion_Persona, objeto_pedido, objeto_ofrecido, estado_solicitud, fecha_solicitud)
             VALUES (%s, %s, %s, 'pendiente', NOW())
-        ''', (propietario_objeto_ofrecido_id, objeto_solicitado_id, objeto_ofrecido_id))
+        ''', (propietario_objeto_ofrecido_id, objeto_ofrecido_id,objeto_solicitado_id))
 
         connection.commit()
         return jsonify({"message": "Solicitud de intercambio enviada correctamente"}), 201
