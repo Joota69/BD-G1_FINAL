@@ -118,21 +118,24 @@ def create_user():
             
             # 2. Inserta en Neo4j DOMICILIO DE LA PERSONA REGISTRADA
             query = '''
-            MERGE (p:PERSONA { id: $user_id, dni: $dni, correo: $correo, name: $name})
+            MERGE (p:PERSONA { name: $nameid: $user_id, dni: $dni, FechaNacimiento:$FechaNacimiento, correo: $correo})
             MERGE (d:DIRECCION { direccion: $direccion, departamento: $departamento, provincia: $provincia, distrito: $distrito})
             MERGE (p)-[:VIVE_EN]->(d)
             RETURN p, d
             '''
+            
             neo4j_conn.execute_query(query, {
                 "user_id": user_id,  # Usar el id de MySQL
+                "name": Nombre,
                 "dni": DNI,
                 "correo": DireccionCorreo,
-                "name": Nombre,
+                "FechaNacimiento": FechaNacimiento,
                 "direccion": Direccion,
                 "departamento": Departamento,
                 "provincia": Provincia,
                 "distrito": Distrito
             })
+            
         else:
             # En caso de no tener dirección (Poco probable), pero en caso pueda ocurrir.
             query = '''
@@ -177,7 +180,7 @@ def get_inbox():
 
         # Consulta para obtener las solicitudes específicas del usuario
         cursor.execute('''
-            SELECT id_solicitud, solicitud_intercambio, estado_solicitud, fecha_solicitud
+            SELECT id_solicitud, objeto_pedido,objeto_ofrecido, estado_solicitud, fecha_solicitud
             FROM inbox_Persona
             WHERE informacion_Persona_idinformacion_Persona = %s
         ''', (user_id,))
@@ -272,7 +275,7 @@ def add_object():
 
     return jsonify({"message": "Object and review added successfully"}), 201
 
-#Agregar objetos al banco
+
 #Agregar objetos al banco
 @app.route('/addObjectbank', methods=['POST'])
 def add_objectbank():
@@ -294,7 +297,8 @@ def add_objectbank():
     cursor = connection.cursor()
 
     try:
-        # Insertar en la tabla objeto
+        # Insertar objeto en el banco
+        
         cursor.execute('''
             INSERT INTO objeto (Nombre, Descripcion, URL_Imagen, URL_Video, informacion_Persona_idinformacion_Persona, categoria) 
             VALUES (%s, %s, %s, %s, %s, %s)
@@ -303,11 +307,25 @@ def add_objectbank():
         # Obtener el id del objeto recién insertado
         idobjeto = cursor.lastrowid
         
+        
+        
         # Insertar en la tabla reseñas_objetos
         cursor.execute('''
             INSERT INTO reseñas_objetos (objeto_idobjeto, estado_estético, estado_funcional, estado_garantia) 
             VALUES (%s, %s, %s, %s)
         ''', (idobjeto, estado_estetico, estado_funcional, estado_garantia))
+        
+        query = '''
+        MATCH (o:OBJETO { id: $id})
+        MERGE (r:RESEÑA {estado_estetico: $estado_estetico, estado_funcional: $estado_funcional, estado_garantia: $estado_garantia})
+        MERGE (o)-[:TIENE_RESEÑA]->(r)
+        '''
+        neo4j_conn.execute_query(query, {
+            "id": idobjeto,
+            "estado_estetico": estado_estetico,
+            "estado_funcional": estado_funcional,
+            "estado_garantia": estado_garantia
+        })
         
         # Modificar has_ticket
         cursor.execute('''
@@ -322,9 +340,21 @@ def add_objectbank():
             VALUES (%s, %s)
         ''', (informacion_Persona_idinformacion_Persona, idobjeto))
         banco_id_banca = cursor.lastrowid
+
+        query = '''
+        MERGE (b:BANCO  { id_banco: $id_banco})
+        MERGE (o:OBJETO { id: $id})
+        MERGE (b)-[:TIENE{dejado_por:$dejado_por}]->(o)
+        RETURN b, o
+        '''
+        neo4j_conn.execute_query(query, {
+            "id_banco":banco_id_banca,
+            "dejado_por": informacion_Persona_idinformacion_Persona,
+            "id": idobjeto  
+        })
+    
         #crear ticket 
         #generar 20 caracteres entre numeros y letras aleatorios en una variables
-
         numero_de_ticket= str(uuid.uuid4())
         
         cursor.execute('''
@@ -332,6 +362,17 @@ def add_objectbank():
             VALUES (%s, %s, %s)
         ''', (banco_id_banca, informacion_Persona_idinformacion_Persona,numero_de_ticket))
         tickeid = cursor.lastrowid
+        query = '''
+        MERGE (p:PERSONA { user_id: $user_id})
+        MERGE (t:TICKET {numero_de_ticket:$numero_de_ticket})
+        MERGE (p)-[:TIENE]->(t)
+        RETURN p,t
+        '''
+        neo4j_conn.execute_query(query, {
+            "user_id": informacion_Persona_idinformacion_Persona,
+            "numero_de_ticket":numero_de_ticket
+        })
+        
        # insertar en detalles_ticket
         cursor.execute('''
             INSERT INTO detalles_ticket (ticket_idticket) 
@@ -360,7 +401,7 @@ def get_objects():
     cursor = connection.cursor(dictionary=True)
 
     # Obtener los objetos
-    cursor.execute('SELECT Nombre, Descripcion,URL_Imagen FROM objeto')
+    cursor.execute('SELECT Nombre, Descripcion FROM objeto')
     rows = cursor.fetchall()
 
     # Obtener información del usuario
@@ -482,18 +523,23 @@ def modify_user():
         user_id = user[0]  # Obtener el ID del usuario (clave foránea en `direccion_persona`)
 
         # Actualización de `informacion_persona`
+        neo4j_persona_updates = {}  # Para almacenar los datos que se enviarán a Neo4j
         if 'Nombre' in data:
             fields_to_update_persona.append('Nombre = %s')
             values_persona.append(data['Nombre'])
+            neo4j_persona_updates['name'] = data['Nombre']
         if 'DNI' in data:
             fields_to_update_persona.append('DNI = %s')
             values_persona.append(data['DNI'])
+            neo4j_persona_updates['dni'] = data['DNI']
         if 'DireccionCorreo' in data:
             fields_to_update_persona.append('DireccionCorreo = %s')
             values_persona.append(data['DireccionCorreo'])
+            neo4j_persona_updates['correo'] = data['DireccionCorreo']
         if 'FechaNacimiento' in data:
             fields_to_update_persona.append('FechaNacimiento = %s')
             values_persona.append(data['FechaNacimiento'])
+            neo4j_persona_updates['fechaNacimiento'] = data['FechaNacimiento']
         if 'password' in data and data['password']:
             fields_to_update_persona.append('password = %s')
             values_persona.append(data['password'])
@@ -508,18 +554,23 @@ def modify_user():
                 session['email'] = data['DireccionCorreo']
 
         # Actualización de `direccion_persona`
+        neo4j_direccion_updates = {}  # Para almacenar los datos que se enviarán a Neo4j
         if 'direccion' in data:
             fields_to_update_direccion.append('direccion = %s')
             values_direccion.append(data['direccion'])
+            neo4j_direccion_updates['direccion'] = data['direccion']
         if 'departamento' in data:
             fields_to_update_direccion.append('departamento = %s')
             values_direccion.append(data['departamento'])
+            neo4j_direccion_updates['departamento'] = data['departamento']
         if 'provincia' in data:
             fields_to_update_direccion.append('provincia = %s')
             values_direccion.append(data['provincia'])
+            neo4j_direccion_updates['provincia'] = data['provincia']
         if 'distrito' in data:
             fields_to_update_direccion.append('distrito = %s')
             values_direccion.append(data['distrito'])
+            neo4j_direccion_updates['distrito'] = data['distrito']
 
         # Si hay campos para actualizar en `direccion_persona`
         if fields_to_update_direccion:
@@ -527,11 +578,37 @@ def modify_user():
             values_direccion.append(user_id)
             cursor.execute(query_direccion, values_direccion)
 
+        # Actualizar en Neo4j
+        if neo4j_persona_updates:
+            query_neo4j_persona = '''
+            MATCH (p:PERSONA {correo: $correo_antiguo})
+            SET p += $updates
+            RETURN p
+            '''
+            neo4j_conn.execute_query(query_neo4j_persona, {
+                "correo_antiguo": email,
+                "updates": neo4j_persona_updates
+            })
+
+        if neo4j_direccion_updates:
+            # Primero, encontrar la dirección actual y actualizarla.
+            query_neo4j_direccion = '''
+            MATCH (p:PERSONA {correo: $correo})
+            MATCH (p)-[:VIVE_EN]->(d:DIRECCION)
+            SET d += $updates
+            RETURN d
+            '''
+            neo4j_conn.execute_query(query_neo4j_direccion, {
+                "correo": email,
+                "updates": neo4j_direccion_updates
+            })
+
         # Confirmar cambios
         connection.commit()
 
     except Exception as e:
         print(f"Error al modificar usuario: {e}")
+        connection.rollback()
         return jsonify({"message": "Internal server error"}), 500
 
     finally:
@@ -539,6 +616,7 @@ def modify_user():
         connection.close()
 
     return jsonify({"message": "User updated successfully"}), 200
+
 
 # Objetos en banco
 @app.route('/bancoObjetos', methods=['GET'])
@@ -609,7 +687,7 @@ def banco_retiro():
     cursor = connection.cursor(dictionary=True)
 
     try:
-        # Seleccionar el idticket
+        # MySQL: Seleccionar el idticket
         cursor.execute('''
             SELECT idticket 
             FROM ticket t 
@@ -626,35 +704,63 @@ def banco_retiro():
         
         idticket = ticket['idticket']
         
-        # Actualizar redimiendo_ticket en la tabla detalles_ticket
+        # MySQL: Actualizar redimiendo_ticket en la tabla detalles_ticket
         cursor.execute('''
             UPDATE detalles_ticket
             SET redimiendo_ticket = CURRENT_TIMESTAMP
             WHERE ticket_idticket = %s
         ''', (idticket,))
-
+        
+        # MySQL: Actualizar fecha_de_salida y llevado_por en banco
         cursor.execute('''
             UPDATE banco
             SET fecha_de_salida = CURRENT_TIMESTAMP, llevado_por = %s
             WHERE objeto_idobjeto = %s
         ''', (informacion_Persona_idinformacion_Persona, objeto_idobjeto))
 
-        # Actualizar has_ticket
+        # MySQL: Actualizar has_ticket
         cursor.execute('''
             UPDATE informacion_Persona
             SET has_ticket = has_ticket - 1
             WHERE idinformacion_Persona = %s
         ''', (informacion_Persona_idinformacion_Persona,))
         
+        banco_id_banca = cursor.lastrowid
+        
+        # Neo4j: Actualizar la información en el grafo
+        query_neo4j = '''
+        MATCH (p:PERSONA { user_id: $user_id})
+        MATCH (o:OBJETO { id: $objeto_id})
+        MATCH (b:BANCO  { id_banco: $id_banco})-[r:TIENE]->(o:OBJETO { id: $objeto_id})
+        MATCH (p:PERSONA { user_id: $user_id})-[z:TIENE]->(TICKET {numero_de_ticket:$numero_de_ticket})
+        DELETE r
+        DELETE z
+        MERGE (p)-[:LLEVO]->(o)
+        RETURN p, o
+        '''
+        numero_de_ticket= str(uuid.uuid4())
+        
+        neo4j_conn.execute_query(query_neo4j, {
+            "user_id": informacion_Persona_idinformacion_Persona,
+            "objeto_id": objeto_idobjeto,
+            "id_banco":banco_id_banca,
+            "numero_de_ticket":numero_de_ticket
+            
+        })
+
+        # Confirmar cambios en MySQL
         connection.commit()
-    except mysql.connector.Error as err:
-        connection.rollback()
+
+    except Exception as err:
+        connection.rollback()  # Revertir cambios en MySQL si hay errores
         return jsonify({"message": f"Error: {err}"}), 500
+
     finally:
         cursor.close()
         connection.close()
 
     return jsonify({"message": "Ticket retrieved and updated successfully", "idticket": idticket}), 200
+
     
 
 

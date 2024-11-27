@@ -102,6 +102,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const description = document.createElement('p');
                 description.textContent = product.Descripcion;
 
+                // Añadir evento para abrir el pop-up cuando se hace clic en la card
+                card.addEventListener('click', () => {
+                    openObjectPopup(product.Nombre, products);
+                });
+
                 card.appendChild(img);
                 card.appendChild(name);
                 card.appendChild(description);
@@ -111,5 +116,87 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (error) {
         console.error('Error fetching products:', error);
     }
-});
 
+    // Función para abrir el pop-up con el nombre del objeto
+    function openObjectPopup(objectName, products) {
+        const objectPopup = document.createElement('div');
+        objectPopup.className = 'modal';
+        
+        const modalContent = document.createElement('div');
+        modalContent.className = 'modal-content';
+        
+        const closeBtn = document.createElement('span');
+        closeBtn.className = 'close';
+        closeBtn.textContent = '×';
+        
+        const title = document.createElement('h2');
+        title.textContent = objectName;
+
+        // Crear el layout con dos dropdowns y el botón de intercambiar
+        const popupBody = document.createElement('div');
+        popupBody.className = 'popup-body';
+
+        // Crear el contenedor izquierdo con el primer dropdown
+        const leftContainer = document.createElement('div');
+        leftContainer.className = 'popup-left';
+
+        const dropdown1 = document.createElement('select');
+        dropdown1.className = 'dropdown';
+
+        // Llenar el dropdown1 con los objetos disponibles
+        products.forEach((product) => {
+            const option = document.createElement('option');
+            option.value = product.Nombre;
+            option.textContent = product.Nombre;
+            dropdown1.appendChild(option);
+        });
+        leftContainer.appendChild(dropdown1);
+
+        // Crear el contenedor derecho con el segundo dropdown (estático con el objeto clickeado)
+        const rightContainer = document.createElement('div');
+        rightContainer.className = 'popup-right';
+
+        const dropdown2 = document.createElement('select');
+        dropdown2.className = 'dropdown';
+        dropdown2.disabled = true;  // Deshabilitar el dropdown de la derecha
+
+        // Establecer el nombre del objeto como el valor y texto del dropdown2
+        const option2 = document.createElement('option');
+        option2.value = objectName;
+        option2.textContent = objectName;
+        dropdown2.appendChild(option2);
+
+        rightContainer.appendChild(dropdown2);
+
+        // Crear el botón de intercambiar
+        const exchangeButton = document.createElement('button');
+        exchangeButton.className = 'exchange-button';
+        exchangeButton.textContent = 'Intercambiar';
+
+        // Agregar los elementos al cuerpo del pop-up
+        popupBody.appendChild(leftContainer);
+        popupBody.appendChild(rightContainer);
+        popupBody.appendChild(exchangeButton);
+
+        modalContent.appendChild(closeBtn);
+        modalContent.appendChild(title);
+        modalContent.appendChild(popupBody);
+        objectPopup.appendChild(modalContent);
+        document.body.appendChild(objectPopup);
+
+        // Mostrar el pop-up
+        objectPopup.style.display = 'block';
+
+        // Cerrar el pop-up cuando se hace clic en la "X"
+        closeBtn.addEventListener('click', () => {
+            objectPopup.style.display = 'none';
+        });
+
+        // Cerrar el modal cuando se hace clic fuera del contenido del modal
+        objectPopup.addEventListener('click', (event) => {
+            if (event.target === objectPopup) {
+                objectPopup.style.display = 'none';
+            }
+        });
+    }
+});

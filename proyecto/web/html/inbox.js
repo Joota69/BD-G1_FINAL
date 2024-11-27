@@ -44,7 +44,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
             row.innerHTML = `
                 <td>${request.id_solicitud}</td>
-                <td>${request.solicitud_intercambio}</td>
+                <td>${request.objeto_pedido}</td>
+                <td>${request.objeto_ofrecido}</td>
                 <td>
                     <span class="status ${getStatusClass(request.estado_solicitud)}">
                         ${request.estado_solicitud}
