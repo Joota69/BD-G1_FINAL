@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (data.length === 0) {
             tableBody.innerHTML = `
                 <tr>
-                    <td colspan="4" class="no-data">No hay solicitudes en tu bandeja de entrada.</td>
+                    <td colspan="5" class="no-data">No hay solicitudes en tu bandeja de entrada.</td>
                 </tr>
             `;
             return;
@@ -47,14 +47,44 @@ document.addEventListener("DOMContentLoaded", () => {
                 <td>${request.objeto_pedido}</td>
                 <td>${request.objeto_ofrecido}</td>
                 <td>
-                    <span class="status ${getStatusClass(request.estado_solicitud)}">
-                        ${request.estado_solicitud}
-                    </span>
+                    <select class="status-dropdown" data-id="${request.id_solicitud}">
+                        <option value="pendiente" ${request.estado_solicitud === 'pendiente' ? 'selected' : ''}>Pendiente</option>
+                        <option value="aceptada" ${request.estado_solicitud === 'aceptada' ? 'selected' : ''}>Aceptada</option>
+                        <option value="rechazada" ${request.estado_solicitud === 'rechazada' ? 'selected' : ''}>Rechazada</option>
+                    </select>
                 </td>
                 <td>${new Date(request.fecha_solicitud).toLocaleString()}</td>
             `;
 
             tableBody.appendChild(row);
+        });
+
+        document.querySelectorAll('.status-dropdown').forEach(dropdown => {
+            dropdown.addEventListener('change', async (event) => {
+                const idSolicitud = event.target.getAttribute('data-id');
+                const nuevoEstado = event.target.value;
+
+                try {
+                    const response = await fetch('http://127.0.0.1:5000/update_inbox_status', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            id_solicitud: idSolicitud,
+                            nuevo_estado: nuevoEstado,
+                        }),
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Error al actualizar el estado');
+                    }
+
+                    alert('Estado actualizado correctamente');
+                } catch (error) {
+                    alert('Error al actualizar el estado');
+                }
+            });
         });
     }
 
@@ -63,7 +93,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const tableBody = document.getElementById('inboxTableBody');
         tableBody.innerHTML = `
             <tr>
-                <td colspan="4" class="no-data">Error al cargar los datos del servidor.</td>
+                <td colspan="5" class="no-data">Error al cargar los datos del servidor.</td>
             </tr>
         `;
     }

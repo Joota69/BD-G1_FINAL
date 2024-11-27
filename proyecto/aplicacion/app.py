@@ -39,9 +39,9 @@ class Neo4jConnection:
 
 # Configuración de la conexión a Neo4j
 neo4j_conn = Neo4jConnection(
-    uri=os.getenv("NEO4J_URI", "bolt://3.93.149.233:7687"),
+    uri=os.getenv("NEO4J_URI", "bolt://44.201.216.233:7687"),
     user=os.getenv("NEO4J_USER", "neo4j"),
-    password=os.getenv("NEO4J_PASSWORD", "rushes-skills-subsystems")
+    password=os.getenv("NEO4J_PASSWORD", "death-weeds-swimmer")
 )
 # ======================================================================================================================
 # Inicio de sesión
@@ -861,7 +861,35 @@ def send_exchange_request():
             cursor.close()
         if connection:
             connection.close()
+@app.route('/update_inbox_status', methods=['POST'])
+def update_inbox_status():
+    data = request.get_json()
+    id_solicitud = data.get('id_solicitud')
+    nuevo_estado = data.get('nuevo_estado')
 
+    if not id_solicitud or not nuevo_estado:
+        return jsonify({"message": "Faltan datos en la solicitud"}), 400
+
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        cursor.execute('''
+            UPDATE inbox_Persona
+            SET estado_solicitud = %s
+            WHERE id_solicitud = %s
+        ''', (nuevo_estado, id_solicitud))
+
+        connection.commit()
+        return jsonify({"message": "Estado actualizado correctamente"}), 200
+    except Exception as e:
+        print(f"Error al actualizar el estado: {e}")
+        return jsonify({"message": "Error interno del servidor"}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
 
 if __name__ == '__main__':
     app.run(debug=True)
