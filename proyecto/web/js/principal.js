@@ -7,6 +7,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     const closeModal = document.getElementsByClassName('close')[0];
     const addObjectForm = document.getElementById('add-object-form');
 
+    // Variables para el carrusel
+    const carousel = document.querySelector('.carousel');
+    const prevButton = document.getElementById('prev');
+    const nextButton = document.getElementById('next');
+    let currentIndex = 0; // Índice actual del carrusel
+
     // Mostrar el modal cuando se hace clic en el botón "Agregar Objeto"
     addObjectButton.addEventListener('click', () => {
         modal.style.display = 'block';
@@ -85,7 +91,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             exchangeQuestion.textContent = '¿Intercambiamos?';
         }
 
-        // Mostrar objetos
+        // Mostrar objetos en el carrusel
         if (products && products.length > 0) {
             products.forEach((product) => {
                 const card = document.createElement('div');
@@ -121,14 +127,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     function openObjectPopup(objectName, products) {
         const objectPopup = document.createElement('div');
         objectPopup.className = 'modal';
-
+        
         const modalContent = document.createElement('div');
         modalContent.className = 'modal-content';
-
+        
         const closeBtn = document.createElement('span');
         closeBtn.className = 'close';
         closeBtn.textContent = '×';
-
+        
         const title = document.createElement('h2');
         title.textContent = objectName;
 
@@ -146,7 +152,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Llenar el dropdown1 con los objetos disponibles
         products.forEach((product) => {
             const option = document.createElement('option');
-            option.value = product.idObjeto;
+            option.value = product.Nombre;
             option.textContent = product.Nombre;
             dropdown1.appendChild(option);
         });
@@ -198,6 +204,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 objectPopup.style.display = 'none';
             }
         });
+<<<<<<< HEAD
 
         // Enviar la solicitud de intercambio cuando se hace clic en el botón "Intercambiar"
         exchangeButton.addEventListener('click', async () => {
@@ -238,5 +245,32 @@ document.addEventListener('DOMContentLoaded', async () => {
                 alert('Hubo un problema al enviar la solicitud de intercambio.');
             }
         });
+=======
+>>>>>>> f06bef610cda4a39240c20a33f5a2142ded919d0
     }
+
+    // Función para mover el carrusel
+    function moveCarousel(direction) {
+        const cards = document.querySelectorAll('.card');
+        const totalCards = cards.length;
+        
+        if (direction === 'next') {
+            currentIndex = (currentIndex + 1) % totalCards;
+        } else if (direction === 'prev') {
+            currentIndex = (currentIndex - 1 + totalCards) % totalCards;
+        }
+
+        // Desplazamos el carrusel para mostrar el siguiente conjunto de productos
+        const offset = -currentIndex * 270; // El ancho de cada card + margen
+        carousel.style.transform = `translateX(${offset}px)`;
+    }
+
+    // Controlar los botones de navegación del carrusel
+    prevButton.addEventListener('click', () => {
+        moveCarousel('prev');
+    });
+
+    nextButton.addEventListener('click', () => {
+        moveCarousel('next');
+    });
 });

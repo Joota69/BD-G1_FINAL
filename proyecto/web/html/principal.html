@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,21 +15,36 @@
             <a href="banco.html">Banco</a>
             <a href="contacto.html">Contactanos</a>
             <a href="inbox.html">Inbox</a>
-            
         </div>
     </nav>
+
     <main>
-        <div id="welcome-message" class="welcome-message"></div>
-        <p id="exchange-question" class="exchange-question"></p>
-       
+        <!-- Sección de bienvenida y pregunta -->
+        <div class="welcome-section">
+            <div id="welcome-message" class="welcome-message"></div>
+            <p id="exchange-question" class="exchange-question"></p>
+        </div>
         <hr>
+
+        <!-- Carrusel de objetos -->
+        <div class="carousel-container">
+            <div class="carousel" id="products-container"></div>
+            <button id="prev" class="carousel-btn">&lt;</button>
+            <button id="next" class="carousel-btn">&gt;</button>
+        </div>
+
         <div class="button-container">
             <button id="add-object-button">Agregar Objeto</button>
         </div>
-        <div class="products-container" id="products-container"></div>
-    </main>
-    
 
+        <!-- Nueva sección de Puntos de encuentro -->
+        <section id="puntos-de-encuentro">
+            <h2>Puntos de Encuentro</h2>
+            <iframe src="https://www.google.com/maps/d/u/0/embed?mid=1D_bI9jsGWjTPXQfOZ6zIi9PamYhD3LQ&ehbc=2E312F&noprof=1" width="640" height="480"></iframe>
+        </section>
+    </main>
+
+    <!-- Modal para agregar objeto -->
     <div id="addObjectModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
@@ -37,16 +52,16 @@
             <form id="add-object-form" class="form-container">
                 <label for="nombre">Nombre:</label>
                 <input type="text" id="nombre" name="nombre" required>
-                
+
                 <label for="descripcion">Descripción:</label>
                 <input type="text" id="descripcion" name="descripcion" required>
-                
+
                 <label for="url_imagen">URL de la Imagen:</label>
                 <input type="url" id="url_imagen" name="url_imagen" required>
-                
+
                 <label for="url_video">URL del Video:</label>
                 <input type="url" id="url_video" name="url_video" required>
-                
+
                 <label for="categoria">Categoría:</label>
                 <select id="categoria" name="categoria" required>
                     <option value="tecnologia">Tecnología</option>
@@ -55,7 +70,7 @@
                     <option value="muebles">Muebles</option>
                     <option value="otros">Otros</option>
                 </select>
-                
+
                 <label for="estado_estetico">Estado Estético del 1 al 5 (5 es nuevo):</label>
                 <select id="estado_estetico" name="estado_estetico" required>
                     <option value="1">1</option>
@@ -64,7 +79,7 @@
                     <option value="4">4</option>
                     <option value="5">5</option>
                 </select>
-                
+
                 <label for="estado_funcional">Estado Funcional del 1 a 5 (5 es nuevo):</label>
                 <select id="estado_funcional" name="estado_funcional" required>
                     <option value="1">1</option>
@@ -73,19 +88,18 @@
                     <option value="4">4</option>
                     <option value="5">5</option>
                 </select>
-                
+
                 <label for="estado_garantia">Estado de Garantía (1: Sí, 0: No):</label>
                 <select id="estado_garantia" name="estado_garantia" required>
                     <option value="1">Sí</option>
                     <option value="0">No</option>
                 </select>
-                
+
                 <button type="submit">Guardar Objeto</button>
             </form>
         </div>
     </div>
-    
-    
+
     <footer>
         &copy; 2024 PutriIntercambiosCompany
     </footer>
