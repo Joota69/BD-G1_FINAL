@@ -282,6 +282,7 @@ def add_object():
 
 #Agregar objetos al banco
 #Agregar objetos al banco
+#Agregar objetos al banco
 @app.route('/addObjectbank', methods=['POST'])
 def add_objectbank():
     informacion_Persona_idinformacion_Persona = session.get('idinformacion_Persona')
@@ -390,12 +391,14 @@ def add_objectbank():
             INSERT INTO ticket (banco_id_banca, informacion_Persona_idinformacion_Persona, numero_de_ticket) 
             VALUES (%s, %s, %s)
         ''', (banco_id_banca, informacion_Persona_idinformacion_Persona, numero_de_ticket))
+        
         ticket_id = cursor.lastrowid
 
         query = '''
-        MATCH (p:PERSONA { user_id: $user_id })
+        MATCH (p:PERSONA { id: $user_id })
         CREATE (t:TICKET { numero_de_ticket: $numero_de_ticket })
         MERGE (p)-[:TIENE]->(t)
+        RETURN p,t 
         '''
         neo4j_conn.execute_query(query, {
             "user_id": informacion_Persona_idinformacion_Persona,
@@ -417,7 +420,6 @@ def add_objectbank():
         connection.close()
 
     return jsonify({"message": "Object and review added successfully"}), 201
-
 
 # Obtener objetos
 @app.route('/get_objects', methods=['GET'])
@@ -769,23 +771,21 @@ def banco_retiro():
         
         # Neo4j: Actualizar la información en el grafo
         query_neo4j = '''
-        MATCH (p:PERSONA { user_id: $user_id})
-        MATCH (o:OBJETO { id: $objeto_id})
-        MATCH (b:BANCO  { id_banco: $id_banco})-[r:TIENE]->(o:OBJETO { id: $objeto_id})
-        MATCH (p:PERSONA { user_id: $user_id})-[z:TIENE]->(TICKET {numero_de_ticket:$numero_de_ticket})
+        MATCH (p:PERSONA { user_id: $user_id })
+        MATCH (o:OBJETO { id: $objeto_id })
+        MATCH (b:BANCO { id_banco: $id_banco })-[r:TIENE]->(o)
+        MATCH (p)-[z:TIENE]->(t:TICKET { numero_de_ticket: $numero_de_ticket })
         DELETE r
-        DELETE z
+        DETACH DELETE t
         MERGE (p)-[:LLEVO]->(o)
         RETURN p, o
-        '''
-        numero_de_ticket= str(uuid.uuid4())
-        
+    '''
+        # Ejecutar la consulta pasando los parámetros correctamente
         neo4j_conn.execute_query(query_neo4j, {
-            "user_id": informacion_Persona_idinformacion_Persona,
-            "objeto_id": objeto_idobjeto,
-            "id_banco":banco_id_banca,
-            "numero_de_ticket":numero_de_ticket
-            
+            "user_id": informacion_Persona_idinformacion_Persona,  # Asegúrate de que esto tenga el valor correcto
+            "objeto_id": objeto_idobjeto,  # Este es el parámetro que falta según el error, asegúrate de que objeto_id tenga un valor
+            "id_banco": banco_id_banca,  # Asegúrate de que esto tenga el valor correcto
+            "numero_de_ticket": idticket  # Asegúrate de que esto tenga el valor correcto
         })
 
         # Confirmar cambios en MySQL
@@ -800,7 +800,6 @@ def banco_retiro():
         connection.close()
 
     return jsonify({"message": "Ticket retrieved and updated successfully", "idticket": idticket}), 200
-
 
 @app.route('/send_exchange_request', methods=['POST'])
 def send_exchange_request():
