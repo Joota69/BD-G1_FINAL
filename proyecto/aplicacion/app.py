@@ -635,7 +635,7 @@ def modify_user():
         if neo4j_direccion_updates:
             # Primero, encontrar la dirección actual y actualizarla.
             query_neo4j_direccion = '''
-            MATCH (p:PERSONA {correo: $correo})
+            MATCH (p:PERSONA { correo: $correo})
             MATCH (p)-[:VIVE_EN]->(d:DIRECCION)
             SET d += $updates
             RETURN d
@@ -770,6 +770,7 @@ def banco_retiro():
         banco_id_banca = cursor.lastrowid
         
         # Neo4j: Actualizar la información en el grafo
+        # Neo4j: Actualizar la información en el grafo
         query_neo4j = '''
         MATCH (p:PERSONA { user_id: $user_id })
         MATCH (o:OBJETO { id: $objeto_id })
@@ -779,12 +780,14 @@ def banco_retiro():
         DETACH DELETE t
         MERGE (p)-[:LLEVO]->(o)
         RETURN p, o
-    '''
-        
+        '''
+
+        # Asegúrate de incluir todos los parámetros necesarios para la consulta de Neo4j
         neo4j_conn.execute_query(query_neo4j, {
             "user_id": informacion_Persona_idinformacion_Persona,  
+            "objeto_id": objeto_idobjeto,  # Agrega el parámetro para el id del objeto
             "id_banco": banco_id_banca,  
-            "numero_de_ticket": idticket 
+            "numero_de_ticket": idticket  # Asegúrate de que idticket esté bien definido
         })
 
         # Confirmar cambios en MySQL
@@ -879,6 +882,7 @@ def update_inbox_status():
         return jsonify({"message": "Faltan datos en la solicitud"}), 400
 
     try:
+        # Conexión a la base de datos SQL
         connection = get_db_connection()
         cursor = connection.cursor()
 
@@ -929,16 +933,42 @@ def update_inbox_status():
                         VALUES (%s, %s, %s, %s, NOW())
                     ''', (objeto_pedido, objeto_ofrecido, persona_id_solicitado, persona_id_ofrecido))
 
+                    # Consultas en Neo4j
+                    try:
+                        query_neo4j = '''
+                        MATCH (p: PERSONA { informacion_Persona: $informacion_Persona_solicitado })
+                        MATCH (p1: PERSONA { informacion_Persona: $informacion_Persona_ofrecido })
+                        MERGE (p)-[z:INTERCAMBIO {objeto_idobjeto: $objeto_pedido, objeto_idobjeto1: $objeto_ofrecido}]->(p1)
+                        RETURN p, z, p1
+                        '''
+
+                        # Ejecución de la consulta en Neo4j
+                        neo4j_conn.execute_query(query_neo4j, {
+                            "informacion_Persona_solicitado": persona_id_solicitado,  
+                            "informacion_Persona_ofrecido": persona_id_ofrecido,  
+                            "objeto_pedido": objeto_pedido,  
+                            "objeto_ofrecido": objeto_ofrecido  
+                        })
+                    except Exception as neo4j_error:
+                        print(f"Error al ejecutar la consulta en Neo4j: {neo4j_error}")
+                        connection.rollback()
+                        return jsonify({"message": "Error al registrar en Neo4j"}), 500
+
+        # Commit de los cambios en la base de datos SQL
         connection.commit()
         return jsonify({"message": "Estado actualizado correctamente"}), 200
+
     except Exception as e:
         print(f"Error al actualizar el estado: {e}")
         return jsonify({"message": "Error interno del servidor"}), 500
+
     finally:
+        # Cierre de conexión con la base de datos SQL
         if cursor:
             cursor.close()
         if connection:
             connection.close()
+
 
 if __name__ == '__main__':
     app.run(debug=True)
