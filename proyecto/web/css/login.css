@@ -1,0 +1,29 @@
+/* Custom Animations */
+.form-field:focus {
+    transform: scale(1.01);
+    transition: transform 0.2s ease;
+}
+
+.btn-press:active {
+    transform: scale(0.98);
+}
+
+/* Autosuggest Styles */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0px 1000px white inset;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Error State Animations */
+.error-shake {
+    animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+@keyframes shake {
+    10%, 90% { transform: translate3d(-1px, 0, 0); }
+    20%, 80% { transform: translate3d(2px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+    40%, 60% { transform: translate3d(4px, 0, 0); }
+}

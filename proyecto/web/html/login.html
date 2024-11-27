@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../js/login.js" defer></script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-100 to-indigo-200 flex items-center justify-center p-4">
+    <main class="bg-white w-full max-w-md rounded-2xl shadow-2xl p-8 space-y-6">
+        <div class="text-center">
+            <h1 class="text-3xl font-bold text-gray-900">Bienvenido</h1>
+            <p class="text-gray-500 mt-2">Inicia Sesión para continuar</p>
+        </div>
+        
+        <form id="loginForm" class="space-y-4" novalidate onsubmit="return loginUser(event)">
+            <div class="space-y-2">
+                <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                <input type="email" id="email" name="email" required autocomplete="email" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" placeholder="you@example.com" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$">
+                <div id="email-error" class="hidden text-red-500 text-sm mt-1">Ingresa un correo valido</div>
+            </div>
+
+            <div class="space-y-2">
+                <label for="password" class="block text-sm font-medium text-gray-700">Contraseña</label>
+                <input type="password" id="password" name="password" required class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" placeholder="Enter your password" minlength="8">
+                <div id="password-error" class="hidden text-red-500 text-sm mt-1">Contraseña</div>
+            </div>
+
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <input id="remember" name="remember" type="checkbox" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                    <label for="remember" class="ml-2 block text-sm text-gray-700">Recuerdame</label>
+                </div>
+                <a href="#" class="text-sm font-medium text-blue-600 hover:text-blue-500">Olvidaste tu contraseña?</a>
+            </div>
+
+            <button type="submit" class="w-full flex items-center justify-center px-4 py-3 border border-transparent rounded-lg shadow-sm text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                Iniciar Sesión
+            </button>
+        </form>
+
+        <div class="text-center">
+            <p class="text-sm text-gray-600">No tienes cuenta? <a href="../html/register.html" class="font-medium text-blue-600 hover:text-blue-500">Registrate</a></p>
+        </div>
+    </main>
+</body>
+</html>

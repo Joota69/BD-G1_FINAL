@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil de Usuario</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        main {
+            padding: 2em;
+        }
+        .user-container, .form-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 1em;
+            margin-bottom: 2em;
+        }
+        .user-container p, .form-container label {
+            margin: 0.5em 0;
+        }
+        .form-container input {
+            width: 100%;
+            padding: 0.5em;
+            margin: 0.5em 0;
+        }
+        .form-container button {
+            padding: 0.5em 1em;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .change-link {
+            margin-left: 10px;
+            color: blue;
+            cursor: pointer;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+    <script src="../js/perfil.js" defer></script>
+</head>
+<body>
+    <main>
+        <h1>Perfil de Usuario</h1>
+        <div id="user-container" class="user-container"></div>
+        <div id="form-container" class="form-container hidden">
+            <h2>Modificar Datos</h2>
+            <form id="modify-form">
+                <label for="nombre">Nombre:</label>
+                <input type="text" id="nombre" name="nombre">
+                
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email">
+                
+                <label for="dni">DNI:</label>
+                <input type="text" id="dni" name="dni">
+                
+                <label for="fechaNacimiento">Fecha de Nacimiento:</label>
+                <input type="date" id="fechaNacimiento" name="fechaNacimiento">
+                
+                <label for="direccion">Dirección:</label>
+                <input type="text" id="direccion" name="direccion">
+            
+                <label for="departamento">Departamento:</label>
+                <input type="text" id="departamento" name="departamento">
+            
+                <label for="provincia">Provincia:</label>
+                <input type="text" id="provincia" name="provincia">
+            
+                <label for="distrito">Distrito:</label>
+                <input type="text" id="distrito" name="distrito">
+
+                <label for="password">Contraseña (dejar vacío si no desea cambiar)</label>
+                <input type="password" id="password" name="password">
+                
+                <button type="submit">Guardar Cambios</button>
+            </form>
+        </div>
+
+        <!-- Botón para eliminar cuenta -->
+        <div id="delete-container" class="delete-container">
+            <button id="delete-button" type="button">Eliminar Cuenta</button>
+        </div>
+    </main>
+</body>
+
+</html>
