@@ -1,11 +1,13 @@
+/* Estilos generales para el cuerpo */
 body {
     font-family: Arial, sans-serif;
     background-color: #ffffff;
     margin: 0;
     padding: 0;
 }
+/* Barra de navegación */
 nav {
-    background-color: #000000;
+    background-color: #555;
     color: white;
     padding: 1rem;
     font-size: 20px;
@@ -18,17 +20,23 @@ nav .products {
     font-weight: bold;
     font-size: 30px;
 }
+
 nav .nav-right a {
     color: white;
     margin-left: 1rem;
     text-decoration: none;
 }
+
 nav .nav-right a.active {
     font-weight: bold;
 }
+
+/* Contenido principal */
 main {
     padding: 2rem;
+    margin-bottom: 3rem;
 }
+
 #user-container {
     background-color: white;
     padding: 1rem;
@@ -37,26 +45,41 @@ main {
     background-color: #040404;
     margin-bottom: 2rem;
 }
+
+
 .button-container {
-    text-align: right;
+    text-align: center;
     margin-bottom: 1rem;
 }
+
 .button-container button {
-    background-color: #FFFF00;
-    color: rgb(0, 0, 0);
+    background-color: #555;
+    color: rgb(255, 255, 255);
     padding: 0.5rem 1rem;
     border: none;
     border-radius: 4px;
     cursor: pointer;
 }
+
+
+
 .button-container button:hover {
     background-color: #000000;
 }
+
 .products-container {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 1rem;
 }
+
+
+.products-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
 .card {
     background-color: white;
     padding: 1rem;
@@ -67,13 +90,19 @@ main {
     flex-direction: column;
     align-items: center;
 }
+
+
+
+
 .card h2 {
     font-size: 1.25rem;
     margin-bottom: 0.5rem;
 }
+
 .card p {
     margin: 0;
 }
+
 .card-img {
     width: 100%;
     height: auto;
@@ -82,15 +111,48 @@ main {
     border-radius: 8px;
     margin-bottom: 1rem;
 }
+
+
+
+
+
+/* Footer */
 footer {
-    background-color: #FFFF00;
-    color: rgb(0, 0, 0);
+    background-color: #555;
+    color: rgb(255, 255, 255);
     text-align: center;
     padding: 0.2rem;
-    position: fixed;
-    bottom: 0;
     width: 100%;
+    margin-top: 2rem;
+    position: relative;
 }
+
+/* Estilo para la sección de Puntos de Encuentro */
+#puntos-de-encuentro {
+    margin-top: 2rem;
+    text-align: center;
+    font-family:Georgia, 'Times New Roman', Times, serif;
+}
+
+#puntos-de-encuentro h2 {
+    font-size: 2rem;
+    color: #333;
+    margin-bottom: 1rem;
+}
+
+#puntos-de-encuentro iframe {
+    border: 0;
+    width: 100%;
+    max-width: 1040px;
+    height: 580px;
+    margin: 0 auto;
+    display: block;
+}
+
+
+
+
+
 .modal {
     display: none;
     position: fixed;
@@ -104,6 +166,12 @@ footer {
     background-color: rgba(0,0,0,0.4);
     padding-top: 60px;
 }
+
+
+
+
+
+
 .modal-content {
     background-color: #fefefe;
     margin: 5% auto;
@@ -113,23 +181,32 @@ footer {
     max-width: 500px;
     border-radius: 8px;
 }
+
 .close {
     color: #aaa;
     float: right;
     font-size: 28px;
     font-weight: bold;
 }
+
 .close:hover,
 .close:focus {
     color: black;
     text-decoration: none;
     cursor: pointer;
 }
+
+
+
+
 .form-container label {
     display: block;
     margin-bottom: 0.5rem;
     font-weight: bold;
 }
+
+
+
 .form-container input {
     width: 100%;
     padding: 0.5rem;
@@ -137,6 +214,7 @@ footer {
     border: 1px solid #ccc;
     border-radius: 4px;
 }
+
 .form-container button {
     background-color: #007bff;
     color: white;
@@ -145,24 +223,39 @@ footer {
     border-radius: 4px;
     cursor: pointer;
 }
+
+
+
 .form-container button:hover {
     background-color: #0056b3;
 }
+
+
+
+/* Estilos de bienvenida */
+.welcome-section {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
 .welcome-message {
     color: #000000;
     font-family: 'Georgia', serif;
     font-size: 2rem;
     margin-bottom: 1rem;
-   
-    
 }
+
+
+
 .exchange-question {
     color: #000000;
     font-family: 'Courier New', Courier, monospace;
     font-size: 1.5rem;
     margin-bottom: 1rem;
     background-color: #FFFF00;
-
+    display: inline-block;
+    padding: 0.2rem 1rem;
+    border-radius: 4px;
 }
 
 /* Estilo para el modal */
@@ -240,5 +333,155 @@ select.dropdown {
     border: 1px solid #ccc;
 }
 
+
+
+
+
+
+
+
+/* Carrusel */
+.carousel-container {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    margin-bottom: 2rem;
+}
+
+.carousel {
+    display: flex;
+    transition: transform 0.3s ease;
+}
+
+.card {
+    background-color: white;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid #000000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-right: 20px;
+    width: 250px;
+    flex-shrink: 0;
+    cursor: pointer; /* Hace que se vea interactivo */
+}
+
+.card:hover {
+    transform: scale(1.05); /* Efecto hover */
+}
+
+.card h2 {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.card p {
+    margin: 0;
+}
+
+.card-img {
+    width: 100%;
+    height: auto;
+    max-height: 200px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+/* Botones de navegación del carrusel */
+.carousel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    font-size: 2rem;
+    padding: 0.5rem;
+    cursor: pointer;
+    z-index: 10;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+}
+
+#prev {
+    left: 10px;
+}
+
+#next {
+    right: 10px;
+}
+
+.carousel-btn:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+/* Modal para agregar objeto */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    padding-top: 60px;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 500px;
+    border-radius: 8px;
+}
+
+.close {
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+}
+
+.form-container label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+}
+
+.form-container input {
+    width: 100%;
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.form-container button {
+    background-color: #007bff;
+    color: white;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.form-container button:hover {
+    background-color: #0056b3;
+}
 
 

@@ -7,6 +7,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     const closeModal = document.getElementsByClassName('close')[0];
     const addObjectForm = document.getElementById('add-object-form');
 
+    // Variables para el carrusel
+    const carousel = document.querySelector('.carousel');
+    const prevButton = document.getElementById('prev');
+    const nextButton = document.getElementById('next');
+    let currentIndex = 0; // Índice actual del carrusel
+
     // Mostrar el modal cuando se hace clic en el botón "Agregar Objeto"
     addObjectButton.addEventListener('click', () => {
         modal.style.display = 'block';
@@ -85,7 +91,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             exchangeQuestion.textContent = '¿Intercambiamos?';
         }
 
-        // Mostrar objetos
+        // Mostrar objetos en el carrusel
         if (products && products.length > 0) {
             products.forEach((product) => {
                 const card = document.createElement('div');
@@ -121,14 +127,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     function openObjectPopup(objectName, products) {
         const objectPopup = document.createElement('div');
         objectPopup.className = 'modal';
-
+        
         const modalContent = document.createElement('div');
         modalContent.className = 'modal-content';
-
+        
         const closeBtn = document.createElement('span');
         closeBtn.className = 'close';
         closeBtn.textContent = '×';
-
+        
         const title = document.createElement('h2');
         title.textContent = objectName;
 
@@ -146,7 +152,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Llenar el dropdown1 con los objetos disponibles
         products.forEach((product) => {
             const option = document.createElement('option');
-            option.value = product.idObjeto;
+            option.value = product.Nombre;
             option.textContent = product.Nombre;
             dropdown1.appendChild(option);
         });
@@ -198,45 +204,30 @@ document.addEventListener('DOMContentLoaded', async () => {
                 objectPopup.style.display = 'none';
             }
         });
-
-        // Enviar la solicitud de intercambio cuando se hace clic en el botón "Intercambiar"
-        exchangeButton.addEventListener('click', async () => {
-            const selectedObjectId = dropdown1.value;
-            const currentUserEmail = sessionStorage.getItem('email'); // Suponiendo que el email está en sessionStorage
-            const currentDate = new Date().toISOString(); // Fecha actual en formato ISO
-
-            // Validar que se haya seleccionado un objeto
-            if (!selectedObjectId) {
-                alert('Por favor, selecciona un objeto para intercambiar.');
-                return;
-            }
-
-            try {
-                // Enviar la solicitud al backend para procesar el intercambio
-                const response = await fetch('http://127.0.0.1:5000/send_exchange_request', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        usuario_id: currentUserEmail, // Esto debería ser el ID o email del usuario
-                        objeto_solicitado_id: selectedObjectId,
-                        objeto_ofrecido_id: objectName,  // El objeto clickeado
-                        fecha_solicitud: currentDate,
-                    }),
-                });
-
-                if (response.ok) {
-                    alert('Solicitud de intercambio enviada correctamente');
-                } else {
-                    const errorData = await response.json();
-                    alert(`Error: ${errorData.message}`);
-                }
-            } catch (error) {
-                console.error('Error enviando solicitud de intercambio:', error);
-                alert('Hubo un problema al enviar la solicitud de intercambio.');
-            }
-        });
     }
+
+    // Función para mover el carrusel
+    function moveCarousel(direction) {
+        const cards = document.querySelectorAll('.card');
+        const totalCards = cards.length;
+        
+        if (direction === 'next') {
+            currentIndex = (currentIndex + 1) % totalCards;
+        } else if (direction === 'prev') {
+            currentIndex = (currentIndex - 1 + totalCards) % totalCards;
+        }
+
+        // Desplazamos el carrusel para mostrar el siguiente conjunto de productos
+        const offset = -currentIndex * 270; // El ancho de cada card + margen
+        carousel.style.transform = `translateX(${offset}px)`;
+    }
+
+    // Controlar los botones de navegación del carrusel
+    prevButton.addEventListener('click', () => {
+        moveCarousel('prev');
+    });
+
+    nextButton.addEventListener('click', () => {
+        moveCarousel('next');
+    });
 });
