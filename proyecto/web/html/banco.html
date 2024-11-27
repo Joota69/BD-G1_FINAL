@@ -69,18 +69,32 @@
             text-decoration: none;
             cursor: pointer;
         }
-        .form-container input {
+        .form-container label {
+            display: block;
+            margin: 0.5em 0 0.2em;
+        }
+        .form-container input,
+        .form-container select,
+        .form-container button {
             width: 100%;
             padding: 0.5em;
-            margin: 0.5em 0;
+            margin-bottom: 1em;
+            box-sizing: border-box;
+        }
+        .form-container select {
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 4px;
         }
         .form-container button {
-            padding: 0.5em 1em;
             background-color: #4CAF50;
             color: white;
             border: none;
             border-radius: 4px;
             cursor: pointer;
+        }
+        .form-container button:hover {
+            background-color: #45a049;
         }
         .details-container img {
             max-width: 100%;
@@ -116,16 +130,37 @@
                 <input type="url" id="url_video" name="url_video" required>
                 
                 <label for="categoria">Categoría:</label>
-                <input type="text" id="categoria" name="categoria" required>
+                <select id="categoria" name="categoria" required>
+                    <option value="tecnologia">Tecnología</option>
+                    <option value="vestimenta">Vestimenta</option>
+                    <option value="cocina">Cocina</option>
+                    <option value="muebles">Muebles</option>
+                    <option value="otros">Otros</option>
+                </select>
                 
-                <label for="estado_estetico">Estado Estético:</label>
-                <input type="text" id="estado_estetico" name="estado_estetico" required>
+                <label for="estado_estetico">Estado Estético del 1 al 5 (5 es nuevo):</label>
+                <select id="estado_estetico" name="estado_estetico" required>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                </select>
                 
-                <label for="estado_funcional">Estado Funcional:</label>
-                <input type="text" id="estado_funcional" name="estado_funcional" required>
+                <label for="estado_funcional">Estado Funcional del 1 a 5 (5 es nuevo):</label>
+                <select id="estado_funcional" name="estado_funcional" required>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                </select>
                 
-                <label for="estado_garantia">Estado de Garantía:</label>
-                <input type="text" id="estado_garantia" name="estado_garantia" required>
+                <label for="estado_garantia">Estado de Garantía (1: Sí, 0: No):</label>
+                <select id="estado_garantia" name="estado_garantia" required>
+                    <option value="1">Si</option>
+                    <option value="0">No</option>
+                </select>
                 
                 <button type="submit">Guardar Objeto</button>
             </form>
