@@ -146,7 +146,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Llenar el dropdown1 con los objetos disponibles
         products.forEach((product) => {
             const option = document.createElement('option');
-            option.value = product.Nombre;
+            option.value = product.idObjeto;
             option.textContent = product.Nombre;
             dropdown1.appendChild(option);
         });
