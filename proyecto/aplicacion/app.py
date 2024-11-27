@@ -401,7 +401,7 @@ def get_objects():
     cursor = connection.cursor(dictionary=True)
 
     # Obtener los objetos
-    cursor.execute('SELECT idObjeto,Nombre, Descripcion, URL_Imagen FROM objeto')
+    cursor.execute('SELECT o.idObjeto,o.Nombre, o.Descripcion, o.URL_Imagen FROM objeto o WHERE idObjeto NOT IN (SELECT b.objeto_idobjeto FROM banco b)')
     rows = cursor.fetchall()
 
     # Obtener información del usuario
