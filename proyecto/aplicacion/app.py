@@ -118,7 +118,7 @@ def create_user():
             
             # 2. Inserta en Neo4j DOMICILIO DE LA PERSONA REGISTRADA
             query = '''
-            MERGE (p:PERSONA { name: $nameid: $user_id, dni: $dni, FechaNacimiento:$FechaNacimiento, correo: $correo})
+            MERGE (p:PERSONA { name: $name,id: $user_id, dni: $dni, FechaNacimiento:$FechaNacimiento, correo: $correo})
             MERGE (d:DIRECCION { direccion: $direccion, departamento: $departamento, provincia: $provincia, distrito: $distrito})
             MERGE (p)-[:VIVE_EN]->(d)
             RETURN p, d
@@ -401,7 +401,7 @@ def get_objects():
     cursor = connection.cursor(dictionary=True)
 
     # Obtener los objetos
-    cursor.execute('SELECT Nombre, Descripcion FROM objeto')
+    cursor.execute('SELECT Nombre, Descripcion, URL_Imagen FROM objeto')
     rows = cursor.fetchall()
 
     # Obtener información del usuario
