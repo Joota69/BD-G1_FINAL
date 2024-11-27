@@ -8,10 +8,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
+<<<<<<< HEAD:proyecto/web/js/scripts.js
                 credentials: 'include', // Incluye cookies/sesiones si es necesario
             });
 
             // Verificar si la respuesta es correcta
+=======
+                credentials: 'include', // Asegura que las cookies se envíen
+            });
+            
+>>>>>>> 6c8df6e6e01795b15162cf047745ceff2807b8b3:proyecto/web/html/scripts.js
             if (!response.ok) {
                 throw new Error(`Error al cargar datos: ${response.status} ${response.statusText}`);
             }
