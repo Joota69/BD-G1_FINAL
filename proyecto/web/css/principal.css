@@ -3,33 +3,85 @@ body {
     background-color: #f4f4f4;
     margin: 0;
     padding: 0;
+    display: flex;
+    flex-direction: column; /* Cambia a diseño en columna */
+    min-height: 100vh; /* Asegura que la página ocupe al menos toda la altura de la ventana */
 }
+
+nav {
+    background-color: #333; /* Fondo oscuro para la barra */
+    color: white;
+    display: flex;
+    flex-direction: column; /* Cambia a diseño vertical */
+    align-items: flex-start; /* Alinea los elementos al inicio */
+    width: 200px; /* Ancho fijo para la barra lateral */
+    height: 100vh; /* Altura completa de la ventana */
+    padding: 1em; /* Espaciado interno */
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+    position: fixed; /* Fija la barra de navegación */
+    top: 0;
+    left: 0;
+}
+
+nav .products {
+    margin-bottom: 2em; /* Añade espacio debajo del título */
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+nav a, nav button {
+    color: white; /* Color de texto */
+    text-decoration: none; /* Quitar subrayado de los enlaces */
+    font-size: 15px; /* Tamaño de texto */
+    padding: 0.5em 1em; /* Espaciado interno */
+    border-radius: 5px; /* Bordes redondeados */
+    background: none; /* Fondo transparente inicialmente */
+    border: none; /* Sin borde en los botones */
+    cursor: pointer; /* Cursor de mano */
+    transition: background-color 0.3s; /* Efecto de transición */
+    margin: 0.5em 0; /* Espaciado vertical entre los enlaces */
+    text-align: left; /* Alinea texto a la izquierda */
+    width: 100%; /* Ocupa todo el ancho de la barra */
+    display: block; /* Asegura que estén uno debajo del otro */
+}
+
+nav a:hover, nav button:hover {
+    background-color: #555; /* Fondo gris en hover */
+}
+
 main {
+    margin-left: 200px; /* Desplaza el contenido principal para dejar espacio a la barra */
     padding: 2em;
+    flex: 1; /* Permite que el contenido principal crezca para empujar el footer */
 }
+
 .products-container {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 1em;
 }
+
 .card {
     background-color: white;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     padding: 1em;
 }
+
 h2 {
     color: #4CAF50;
 }
+
 footer {
     background-color: #333;
     color: white;
-    text-align: center;
-    padding: 1em 0;
-    position: fixed;
-    width: 100%;
-    bottom: 0;
+    text-align: center; /* Centrar texto en el footer */
+    padding: 10px 0;
+    position: relative; /* Posición relativa para mantenerlo en el flujo normal */
+    width: 100%; /* Ocupa todo el ancho de la ventana */
+    margin-top: auto; /* Empuja el footer hacia el final del contenedor */
 }
+
 .modal {
     display: none;
     position: fixed;
@@ -41,6 +93,7 @@ footer {
     overflow: auto;
     background-color: rgba(0, 0, 0, 0.4);
 }
+
 .modal-content {
     background-color: white;
     margin: 15% auto;
@@ -50,23 +103,27 @@ footer {
     max-width: 500px;
     border-radius: 8px;
 }
+
 .close {
     color: #aaa;
     float: right;
     font-size: 28px;
     font-weight: bold;
 }
+
 .close:hover,
 .close:focus {
     color: black;
     text-decoration: none;
     cursor: pointer;
 }
+
 .form-container input {
     width: 100%;
     padding: 0.5em;
     margin: 0.5em 0;
 }
+
 .form-container button {
     padding: 0.5em 1em;
     background-color: #4CAF50;
@@ -75,66 +132,40 @@ footer {
     border-radius: 4px;
     cursor: pointer;
 }
-nav {
-    background-color: #333; /* Fondo oscuro para la barra */
-    display: flex;
-    justify-content: space-between; /* Espacio entre el grupo de la izquierda y el grupo de la derecha */
-    align-items: center; /* Centrar verticalmente */
-    padding: 1em; /* Espaciado interno */
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Sombra */
-}
 
-nav .products {
-    color: white; /* Color del texto */
-    font-size: 1.5em; /* Tamaño del texto */
-    font-weight: bold; /* Negrita */
-}
-
-nav a, nav button {
-    color: white; /* Color de texto */
-    text-decoration: none; /* Quitar subrayado de los enlaces */
-    font-size: 15px; /* Tamaño de texto */
-    padding: 0.5em 1em; /* Espaciado interno */
-    border-radius: 100px; /* Bordes redondeados */
-    background: none; /* Fondo transparente inicialmente */
-    border: none; /* Sin borde en los botones */
-    cursor: pointer; /* Cursor de mano */
-    transition: background-color 0.3s; /* Efecto de transición */
-}
-
-nav a:hover, nav button:hover {
-    background-color: #555; /* Fondo verde en hover */
-}
-
-nav button {
-    background-color: none; /* Fondo para botones por defecto */
-}
-
-nav button:hover {
-    background-color: #555; /* Fondo verde al pasar el ratón */
-}
-
-.nav-right {
-    display: flex; /* Alínea los elementos horizontalmente */
-    gap: 1em; /* Espacio entre enlaces y botón */
-}
 .button-container {
-    display: flex; /* Usa Flexbox para controlar la alineación */
+    display: flex;
     justify-content: flex-end; /* Alinea los elementos a la derecha */
     margin: 1em 0; /* Espaciado superior e inferior */
 }
 
 #add-object-button {
-    padding: 0.5em 1em; /* Espaciado interno */
-    font-size: 1em; /* Tamaño del texto */
-    background-color: #4CAF50; /* Fondo verde */
-    color: white; /* Texto blanco */
-    border: none; /* Sin borde */
-    border-radius: 5px; /* Bordes redondeados */
-    cursor: pointer; /* Cursor de mano */
-    transition: background-color 0.3s; /* Transición para el efecto hover */
+    padding: 0.5em 1em;
+    font-size: 1em;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
 }
 
 #add-object-button:hover {
-    background-color: #45a049; /* Fondo más oscuro al pasar el ratón */
+    background-color: #45a049;
+}
+
+#welcome-message {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin-bottom: 0.5em;
+    text-align: right;
+    margin-right: 1em;
+}
+
+#exchange-question {
+    font-size: 1.2em;
+    margin-bottom: 1em;
+    color: #555;
+    text-align: right;
+    margin-right: 1em;
 }

@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', async () => {
     const container = document.getElementById('products-container');
-    const userContainer = document.getElementById('user-container'); // Asegúrate de tener este contenedor en tu HTML
+    const welcomeMessage = document.getElementById('welcome-message');
+    const exchangeQuestion = document.getElementById('exchange-question');
     const addObjectButton = document.getElementById('add-object-button');
     const modal = document.getElementById('addObjectModal');
     const closeModal = document.getElementsByClassName('close')[0];
@@ -34,21 +35,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             URL_Imagen: formData.get('url_imagen'),
             URL_Video: formData.get('url_video'),
             categoria: formData.get('categoria'),
-            //idobjeto: formData.get('idobjeto'),
             estado_estetico: formData.get('estado_estetico'),
             estado_funcional: formData.get('estado_funcional'),
-            estado_garantia: formData.get('estado_garantia')
-       
+            estado_garantia: formData.get('estado_garantia'),
         };
 
         try {
             const response = await fetch('http://127.0.0.1:5000/addObject', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
                 credentials: 'include',
-                body: JSON.stringify(data)
+                body: JSON.stringify(data),
             });
 
             if (response.ok) {
@@ -67,50 +66,28 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
         const response = await fetch('http://127.0.0.1:5000/get_objects', {
-            credentials: 'include'
+            credentials: 'include',
         });
+
         if (response.status === 401) {
             console.error('No email found in session');
             return;
         }
+
         const data = await response.json();
         const products = data['objects'];
         const userInfo = data['info'];
 
-        // Agrega un console.log para ver los datos que llegan a data['info']
-        console.log('Datos de data:', data);
-        console.log('Datos de userInfo:', userInfo);
-        console.log('Datos de products:', products);
-
-        // Mostrar información del usuario (DNI)
+        // Mostrar el mensaje de bienvenida y la pregunta
         if (userInfo && userInfo.length > 0) {
             const user = userInfo[0];
-
-            const userCard = document.createElement('div');
-            userCard.className = 'card';
-
-            const name = document.createElement('p');
-            name.textContent = `Nombre: ${user.Nombre}`;
-
-            const email = document.createElement('p');
-            email.textContent = `Email: ${user.DireccionCorreo}`;
-
-            const dni = document.createElement('p');
-            dni.textContent = `DNI: ${user.DNI}`;
-
-            const has_ticket = document.createElement('p');
-            has_ticket.textContent = `Ticket Disponibles: ${user.has_ticket}`;
-
-            userCard.appendChild(name);
-            userCard.appendChild(email);
-            userCard.appendChild(dni);
-            userCard.appendChild(has_ticket);
-            userContainer.appendChild(userCard);
+            welcomeMessage.textContent = `Bienvenido ${user.Nombre}`;
+            exchangeQuestion.textContent = '¿Intercambiamos?';
         }
 
         // Mostrar objetos
         if (products && products.length > 0) {
-            products.forEach(product => {
+            products.forEach((product) => {
                 const card = document.createElement('div');
                 card.className = 'card';
 
@@ -129,3 +106,4 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error('Error fetching products:', error);
     }
 });
+
