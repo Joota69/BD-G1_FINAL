@@ -780,12 +780,11 @@ def banco_retiro():
         MERGE (p)-[:LLEVO]->(o)
         RETURN p, o
     '''
-        # Ejecutar la consulta pasando los parámetros correctamente
+        
         neo4j_conn.execute_query(query_neo4j, {
-            "user_id": informacion_Persona_idinformacion_Persona,  # Asegúrate de que esto tenga el valor correcto
-            "objeto_id": objeto_idobjeto,  # Este es el parámetro que falta según el error, asegúrate de que objeto_id tenga un valor
-            "id_banco": banco_id_banca,  # Asegúrate de que esto tenga el valor correcto
-            "numero_de_ticket": idticket  # Asegúrate de que esto tenga el valor correcto
+            "user_id": informacion_Persona_idinformacion_Persona,  
+            "id_banco": banco_id_banca,  
+            "numero_de_ticket": idticket 
         })
 
         # Confirmar cambios en MySQL
