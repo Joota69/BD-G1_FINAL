@@ -795,13 +795,14 @@ def banco_retiro():
 @app.route('/send_exchange_request', methods=['POST'])
 def send_exchange_request():
     data = request.get_json()
-    usuario_id = session.get('idinformacion_Persona')
-    objeto_solicitado_nombre = data.get('objeto_solicitado_id')  # Asumiendo que este es el nombre del objeto solicitado
-    objeto_ofrecido_nombre = data.get('objeto_ofrecido_id')  # Asumiendo que este es el nombre del objeto ofrecido
+    usuario_id = session.get('idinformacion_Persona')  # ID de la persona que solicita el intercambio
+    objeto_solicitado_nombre = data.get('objeto_solicitado_id')  # Nombre del objeto solicitado
+    objeto_ofrecido_nombre = data.get('objeto_ofrecido_id')  # Nombre del objeto ofrecido
 
     print(f"usuario_id: {usuario_id}")
     print(f"objeto_solicitado_nombre: {objeto_solicitado_nombre}")
     print(f"objeto_ofrecido_nombre: {objeto_ofrecido_nombre}")
+    
     if not usuario_id or not objeto_solicitado_nombre or not objeto_ofrecido_nombre:
         return jsonify({"message": "Faltan datos en la solicitud"}), 400
 
@@ -812,7 +813,7 @@ def send_exchange_request():
 
         # Buscar el ID del objeto solicitado por su nombre
         cursor.execute('''
-            SELECT idobjeto
+            SELECT idobjeto, informacion_Persona_idInformacion_Persona
             FROM objeto
             WHERE Nombre = %s
             LIMIT 1
@@ -823,11 +824,13 @@ def send_exchange_request():
             return jsonify({"message": "Objeto solicitado no encontrado"}), 404
 
         objeto_solicitado_id = result_solicitado[0]
+        propietario_objeto_solicitado_id = result_solicitado[1]  # ID de la persona propietaria del objeto solicitado
         print(f"objeto_solicitado_id: {objeto_solicitado_id}")
+        print(f"propietario_objeto_solicitado_id: {propietario_objeto_solicitado_id}")
 
         # Buscar el ID del objeto ofrecido por su nombre
         cursor.execute('''
-            SELECT idobjeto
+            SELECT idobjeto, informacion_Persona_idInformacion_Persona
             FROM objeto
             WHERE Nombre = %s
             LIMIT 1
@@ -838,13 +841,15 @@ def send_exchange_request():
             return jsonify({"message": "Objeto ofrecido no encontrado"}), 404
 
         objeto_ofrecido_id = result_ofrecido[0]
+        propietario_objeto_ofrecido_id = result_ofrecido[1]  # ID de la persona propietaria del objeto ofrecido
         print(f"objeto_ofrecido_id: {objeto_ofrecido_id}")
+        print(f"propietario_objeto_ofrecido_id: {propietario_objeto_ofrecido_id}")
 
-        # Insertar la solicitud de intercambio en la base de datos usando NOW() para la fecha_solicitud
+        # Insertar la solicitud de intercambio en el inbox de la persona que ofrece el objeto
         cursor.execute('''
             INSERT INTO inbox_Persona (informacion_Persona_idinformacion_Persona, objeto_pedido, objeto_ofrecido, estado_solicitud, fecha_solicitud)
             VALUES (%s, %s, %s, 'pendiente', NOW())
-        ''', (usuario_id, objeto_solicitado_id, objeto_ofrecido_id))
+        ''', (propietario_objeto_ofrecido_id, objeto_solicitado_id, objeto_ofrecido_id))
 
         connection.commit()
         return jsonify({"message": "Solicitud de intercambio enviada correctamente"}), 201
