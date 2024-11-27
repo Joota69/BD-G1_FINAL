@@ -277,6 +277,7 @@ def add_object():
 
 
 #Agregar objetos al banco
+#Agregar objetos al banco
 @app.route('/addObjectbank', methods=['POST'])
 def add_objectbank():
     informacion_Persona_idinformacion_Persona = session.get('idinformacion_Persona')
@@ -293,48 +294,74 @@ def add_objectbank():
     estado_funcional = data.get('estado_funcional')
     estado_garantia = data.get('estado_garantia')
 
+    if not Nombre or not categoria:
+        return jsonify({"message": "Nombre and categoria are required"}), 400
+
     connection = get_db_connection()
     cursor = connection.cursor()
 
     try:
-        # Insertar objeto en el banco
-        
+        # Insertar objeto en la base de datos MySQL
         cursor.execute('''
             INSERT INTO objeto (Nombre, Descripcion, URL_Imagen, URL_Video, informacion_Persona_idinformacion_Persona, categoria) 
             VALUES (%s, %s, %s, %s, %s, %s)
         ''', (Nombre, Descripcion, URL_Imagen, URL_Video, informacion_Persona_idinformacion_Persona, categoria))
         
-        # Obtener el id del objeto recién insertado
+        # Obtener el ID del objeto recién insertado
         idobjeto = cursor.lastrowid
-        
-        
-        
-        # Insertar en la tabla reseñas_objetos
+
+        # Insertar reseñas en MySQL
         cursor.execute('''
             INSERT INTO reseñas_objetos (objeto_idobjeto, estado_estético, estado_funcional, estado_garantia) 
             VALUES (%s, %s, %s, %s)
         ''', (idobjeto, estado_estetico, estado_funcional, estado_garantia))
-        
+
+        # Crear nodos y relaciones en Neo4j
         query = '''
-        MATCH (o:OBJETO { id: $id})
-        MERGE (r:RESEÑA {estado_estetico: $estado_estetico, estado_funcional: $estado_funcional, estado_garantia: $estado_garantia})
-        MERGE (o)-[:TIENE_RESEÑA]->(r)
+        MERGE (o:OBJETO { id: $id })
+        ON CREATE SET o.name = $name, o.descripcion = $descripcion, o.url_imagen = $url_imagen, o.url_video = $url_video, o.categoria = $categoria
+        MERGE (r:RESEÑA { id: apoc.create.uuid(), estado_estetico: $estado_estetico, estado_funcional: $estado_funcional, estado_garantia: $estado_garantia })
+        ON CREATE SET r.name = $default_name
+        CREATE (o)-[:TIENE_RESEÑA]->(r)
         '''
         neo4j_conn.execute_query(query, {
             "id": idobjeto,
+            "name": Nombre,
+            "default_name": f"Reseña_Objeto_{idobjeto}",
+            "descripcion": Descripcion,
+            "url_imagen": URL_Imagen,
+            "url_video": URL_Video,
+            "categoria": categoria,
             "estado_estetico": estado_estetico,
             "estado_funcional": estado_funcional,
             "estado_garantia": estado_garantia
         })
-        
-        # Modificar has_ticket
+
+        # Relacionar la persona existente con el objeto subido
+        query = '''
+        MERGE (p:PERSONA { id: $user_id})
+        MERGE (o:OBJETO { name: $name,id: $id,descripcion: $descripcion, url_imagen: $url_imagen, url_video: $url_video, categoria: $categoria})
+        MERGE (p)-[:AGREGO]->(o)
+        RETURN p, o
+        '''
+        neo4j_conn.execute_query(query, {
+            "user_id": informacion_Persona_idinformacion_Persona,
+            "name": Nombre,
+            "id": idobjeto,
+            "descripcion": Descripcion,
+            "url_imagen": URL_Imagen,
+            "url_video": URL_Video,
+            "categoria": categoria
+        })
+
+        # Actualizar has_ticket en MySQL
         cursor.execute('''
             UPDATE informacion_Persona 
             SET has_ticket = has_ticket + 1 
             WHERE idinformacion_Persona = %s
         ''', (informacion_Persona_idinformacion_Persona,))
-        
-        # Insertar en la tabla banco
+
+        # Insertar en banco y relacionar en Neo4j
         cursor.execute('''
             INSERT INTO banco (dejado_por, objeto_idobjeto) 
             VALUES (%s, %s)
@@ -342,42 +369,40 @@ def add_objectbank():
         banco_id_banca = cursor.lastrowid
 
         query = '''
-        MERGE (b:BANCO  { id_banco: $id_banco})
-        MERGE (o:OBJETO { id: $id})
-        MERGE (b)-[:TIENE{dejado_por:$dejado_por}]->(o)
-        RETURN b, o
+        MATCH (o:OBJETO { id: $id })
+        MERGE (b:BANCO { id_banco: $id_banco })
+        ON CREATE SET b.name = $default_name
+        CREATE (o)-[:RECEPCIONADO]->(b)
         '''
         neo4j_conn.execute_query(query, {
-            "id_banco":banco_id_banca,
-            "dejado_por": informacion_Persona_idinformacion_Persona,
-            "id": idobjeto  
+            "id_banco": banco_id_banca,
+            "id": idobjeto,
+            "default_name": f"Stored_Objeto_{idobjeto}"
         })
-    
-        #crear ticket 
-        #generar 20 caracteres entre numeros y letras aleatorios en una variables
-        numero_de_ticket= str(uuid.uuid4())
-        
+
+        # Crear ticket en MySQL y Neo4j
+        numero_de_ticket = str(uuid.uuid4())
         cursor.execute('''
-            INSERT INTO ticket (banco_id_banca, informacion_Persona_idinformacion_Persona,numero_de_ticket) 
+            INSERT INTO ticket (banco_id_banca, informacion_Persona_idinformacion_Persona, numero_de_ticket) 
             VALUES (%s, %s, %s)
-        ''', (banco_id_banca, informacion_Persona_idinformacion_Persona,numero_de_ticket))
-        tickeid = cursor.lastrowid
+        ''', (banco_id_banca, informacion_Persona_idinformacion_Persona, numero_de_ticket))
+        ticket_id = cursor.lastrowid
+
         query = '''
-        MERGE (p:PERSONA { user_id: $user_id})
-        MERGE (t:TICKET {numero_de_ticket:$numero_de_ticket})
+        MATCH (p:PERSONA { user_id: $user_id })
+        CREATE (t:TICKET { numero_de_ticket: $numero_de_ticket })
         MERGE (p)-[:TIENE]->(t)
-        RETURN p,t
         '''
         neo4j_conn.execute_query(query, {
             "user_id": informacion_Persona_idinformacion_Persona,
-            "numero_de_ticket":numero_de_ticket
+            "numero_de_ticket": numero_de_ticket
         })
-        
-       # insertar en detalles_ticket
+
+        # Insertar detalles del ticket en MySQL
         cursor.execute('''
             INSERT INTO detalles_ticket (ticket_idticket) 
             VALUES (%s)
-        ''', (tickeid,)) 
+        ''', (ticket_id,))
 
         connection.commit()
     except mysql.connector.Error as err:
@@ -388,6 +413,7 @@ def add_objectbank():
         connection.close()
 
     return jsonify({"message": "Object and review added successfully"}), 201
+
 
 # Obtener objetos
 @app.route('/get_objects', methods=['GET'])
