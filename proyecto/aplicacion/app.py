@@ -761,7 +761,69 @@ def banco_retiro():
 
     return jsonify({"message": "Ticket retrieved and updated successfully", "idticket": idticket}), 200
 
-    
+
+@app.route('/send_exchange_request', methods=['POST'])
+def send_exchange_request():
+    data = request.get_json()
+    usuario_id = data.get('usuario_id')
+    objeto_solicitado_id = data.get('objeto_solicitado_id')
+    objeto_ofrecido_id = data.get('objeto_ofrecido_id')
+    fecha_solicitud = data.get('fecha_solicitud')
+
+    if not usuario_id or not objeto_solicitado_id or not objeto_ofrecido_id or not fecha_solicitud:
+        return jsonify({"message": "Faltan datos en la solicitud"}), 400
+
+    try:
+        # Insertar la solicitud de intercambio en la base de datos
+        connection = get_db_connection()
+        cursor = connection.cursor()
+
+        cursor.execute('''
+            INSERT INTO inbox_Persona (informacion_Persona_idinformacion_Persona, objeto_pedido, objeto_ofrecido, estado_solicitud, fecha_solicitud)
+            VALUES (%s, %s, %s, 'pendiente', %s)
+        ''', (usuario_id, objeto_solicitado_id, objeto_ofrecido_id, fecha_solicitud))
+
+        connection.commit()
+
+        # Enviar correo de solicitud (esto depende de tu configuración de correo)
+        # Puedes usar un servicio de correo como `smtplib` o algún servicio de email.
+        send_email(usuario_id, objeto_solicitado_id, objeto_ofrecido_id, fecha_solicitud)
+
+        return jsonify({"message": "Solicitud de intercambio enviada correctamente"}), 200
+
+    except Exception as e:
+        print(f"Error al enviar solicitud de intercambio: {e}")
+        return jsonify({"message": "Error interno del servidor"}), 500
+    finally:
+        cursor.close()
+        connection.close()
+
+# Función para enviar el correo (ejemplo con smtplib)
+def send_email(usuario_id, objeto_solicitado_id, objeto_ofrecido_id, fecha_solicitud):
+    try:
+        # Configura tu servidor de correo aquí (por ejemplo, usando smtplib)
+        from smtplib import SMTP
+        from email.mime.text import MIMEText
+        from email.mime.multipart import MIMEMultipart
+
+        msg = MIMEMultipart()
+        msg['From'] = 'tu_correo@dominio.com'
+        msg['To'] = 'correo_destinatario@dominio.com'  # Aquí deberías obtener el correo del destinatario
+        msg['Subject'] = 'Solicitud de intercambio de objetos'
+
+        body = f"El usuario con ID {usuario_id} ha solicitado un intercambio. Objetos involucrados:\n\n"
+        body += f"Objeto solicitado (ID: {objeto_solicitado_id})\n"
+        body += f"Objeto ofrecido (ID: {objeto_ofrecido_id})\n"
+        body += f"Fecha de solicitud: {fecha_solicitud}"
+
+        msg.attach(MIMEText(body, 'plain'))
+
+        with SMTP('smtp.dominio.com') as server:
+            server.login('tu_usuario', 'tu_contraseña')
+            server.sendmail(msg['From'], msg['To'], msg.as_string())
+
+    except Exception as e:
+        print(f"Error enviando el correo: {e}")
 
 
 
