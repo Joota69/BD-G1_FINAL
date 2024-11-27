@@ -202,7 +202,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Enviar la solicitud de intercambio cuando se hace clic en el botón "Intercambiar"
         exchangeButton.addEventListener('click', async () => {
             const selectedObjectId = dropdown1.value;
-            const currentUserEmail = sessionStorage.getItem('email'); // Suponiendo que el email está en sessionStorage
+            
             const currentDate = new Date().toISOString(); // Fecha actual en formato ISO
 
             // Validar que se haya seleccionado un objeto
@@ -220,7 +220,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     },
                     credentials: 'include',
                     body: JSON.stringify({
-                        usuario_id: currentUserEmail, // Esto debería ser el ID o email del usuario
+                         
                         objeto_solicitado_id: selectedObjectId,
                         objeto_ofrecido_id: objectName,  // El objeto clickeado
                         fecha_solicitud: currentDate,
