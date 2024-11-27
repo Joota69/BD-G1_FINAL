@@ -162,42 +162,29 @@ def create_user():
         
 
 
+# Para el inbox
 @app.route('/api/inbox', methods=['GET'])
 def get_inbox():
-    user_id = session.get('idinformacion_Persona')
-    if not user_id:
-        return jsonify({"message": "User not logged in"}), 401  # Validar si el usuario no está logueado
-
-    connection = get_db_connection()
-    cursor = connection.cursor(dictionary=True)
-    cursor.execute('''
-        SELECT id_solicitud, solicitud_intercambio, estado_solicitud, fecha_solicitud
-        FROM inbox_Persona
-    ''', (user_id,))
-    rows = cursor.fetchall()
-    cursor.close()
-    connection.close()
-    return jsonify(rows), 200
-
-
-# Para detalles del inbox
-
-@app.route('/api/inbox/<int:request_id>', methods=['GET'])
-def get_request_details(request_id):
+    # Obtener el ID del usuario desde la sesión
     user_id = session.get('idinformacion_Persona')
     if not user_id:
         return jsonify({"message": "User not logged in"}), 401
 
-    connection = get_db_connection()
-    cursor = connection.cursor(dictionary=True)
-    cursor.execute('''
-        SELECT id_solicitud, solicitud_intercambio, estado_solicitud, fecha_solicitud
-        FROM inbox_Persona
-        WHERE id_solicitud = %s AND informacion_Persona_idinformacion_Persona = %s
-    ''', (request_id, user_id))
-    request = cursor.fetchone()
-    cursor.close()
-    connection.close()
+    try:
+        # Conexión a la base de datos
+        connection = get_db_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        # Consulta para obtener las solicitudes específicas del usuario
+        cursor.execute('''
+            SELECT id_solicitud, solicitud_intercambio, estado_solicitud, fecha_solicitud
+            FROM inbox_Persona
+            WHERE informacion_Persona_idinformacion_Persona = %s
+        ''', (user_id,))
+        rows = cursor.fetchall()
+
+        cursor.close()
+        connection.close()
 
         # Retorna las solicitudes como JSON
         return jsonify(rows), 200
@@ -205,7 +192,6 @@ def get_request_details(request_id):
     except mysql.connector.Error as err:
         print(f"Error al obtener el inbox: {err}")
         return jsonify({"message": "Error fetching inbox data"}), 500
-
         
 #Agregar objetos
 @app.route('/addObject', methods=['POST'])
