@@ -37,10 +37,8 @@
             border-radius: 4px;
             cursor: pointer;
         }
-        .change-link {
-            margin-left: 10px;
-            color: blue;
-            cursor: pointer;
+        .form-container button:hover {
+            background-color: #45a049;
         }
         .hidden {
             display: none;
@@ -51,7 +49,10 @@
 <body>
     <main>
         <h1>Perfil de Usuario</h1>
+        <!-- Contenedor para la información del usuario -->
         <div id="user-container" class="user-container"></div>
+
+        <!-- Contenedor para el formulario de edición -->
         <div id="form-container" class="form-container hidden">
             <h2>Modificar Datos</h2>
             <form id="modify-form">
@@ -79,7 +80,7 @@
                 <label for="distrito">Distrito:</label>
                 <input type="text" id="distrito" name="distrito">
 
-                <label for="password">Contraseña (dejar vacío si no desea cambiar)</label>
+                <label for="password">Contraseña (dejar vacío si no desea cambiar):</label>
                 <input type="password" id="password" name="password">
                 
                 <button type="submit">Guardar Cambios</button>
@@ -92,5 +93,4 @@
         </div>
     </main>
 </body>
-
 </html>
